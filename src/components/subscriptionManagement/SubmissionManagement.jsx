@@ -8,6 +8,7 @@ import RespondentSubmission from "./respondent/RespondentSubmission";
 import TechnicalSupportSubmission from "./technicalSupport/technicalSupportSubmission";
 import JurorProgramSubmission from "./enrollJurorProgram/JurorProgramSubmission";
 import IdentityDisputeSubmission from "./identityClaim/IdentityDisputeSubmission";
+import RecusalSubmission from "./recusal/RecusalSubmission";
 
 export default function SubmmissionManagement() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -80,6 +81,7 @@ export default function SubmmissionManagement() {
       {selected === "technical_support" && <TechnicalSupportSubmission />}
       {selected === "juror_program" && <JurorProgramSubmission />}
       {selected === "identity_dispute" && <IdentityDisputeSubmission />}
+      {selected === "recusal_conflict" && <RecusalSubmission />}
     </div>
   );
 }
