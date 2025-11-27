@@ -4,7 +4,15 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: "10.10.7.46",
-    // port: ,
+    host: "10.10.7.42",
+    port: 3014,
   },
 });
+
+// export default defineConfig({
+//   plugins: [react()],
+//   server: {
+//     host: "https://juror.glassfile.xyz/",
+//     port: 3016,
+//   },
+// });

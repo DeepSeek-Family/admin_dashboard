@@ -5,6 +5,7 @@ import { FaTrash } from "react-icons/fa";
 import { IoEyeSharp } from "react-icons/io5";
 import Swal from "sweetalert2";
 import MarchantIcon from "../../assets/marchant.png";
+import { Rate } from "antd";
 
 const components = {
   header: {
@@ -44,11 +45,12 @@ const CustomerManagement = () => {
       image: "https://i.ibb.co/8gh3mqPR/Ellipse-48-1.jpg",
       email: "example@email.com",
       retailer: 5,
-      sales: "300",
+      sales: "$300",
       status: "Active",
       phone: "+1234567890",
       location: "New York",
       businessName: "Alice's Store",
+      feedback: 5,
     },
     {
       id: 2,
@@ -56,50 +58,60 @@ const CustomerManagement = () => {
       image: "https://i.ibb.co/8gh3mqPR/Ellipse-48-1.jpg",
       email: "john@email.com",
       retailer: 3,
-      sales: "500",
+      sales: "$500",
       status: "Inactive",
       phone: "+9876543210",
       location: "California",
       businessName: "John's Shop",
+      feedback: 4,
     },
     {
       id: 3,
-      name: "John",
+      name: "Sam Smith",
       image: "https://i.ibb.co/8gh3mqPR/Ellipse-48-1.jpg",
-      email: "john@email.com",
+      email: "sam@email.com",
       retailer: 3,
-      sales: "500",
+      sales: "$500",
       status: "Active",
       phone: "+9876543210",
       location: "California",
-      businessName: "John's Shop",
+      businessName: "Sam's Shop",
+      feedback: 3,
     },
   ]);
 
-  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
   const [searchText, setSearchText] = useState(""); // Search text state
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   const navigate = useNavigate();
 
+  // Show view details modal
   const showViewModal = (record) => {
     setSelectedRecord(record);
     setIsViewModalVisible(true);
   };
 
+  // Show feedback modal
+  const showFeedbackModal = (record) => {
+    setSelectedRecord(record);
+    setIsFeedbackModalVisible(true);
+  };
+
+  // Close view modal
   const handleCloseViewModal = () => {
     setIsViewModalVisible(false);
     setSelectedRecord(null);
   };
 
-  const filteredData = data.filter(
-    (item) =>
-      item.id.toString().includes(searchText) ||
-      item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.phone.includes(searchText) ||
-      item.email.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Close feedback modal
+  const handleCloseFeedbackModal = () => {
+    setIsFeedbackModalVisible(false);
+    setSelectedRecord(null);
+  };
 
+  // Columns for loyalty points / orders
   const columns2 = [
     {
       title: "SL",
@@ -123,15 +135,25 @@ const CustomerManagement = () => {
     },
   ];
 
+  // Columns for feedback table
+  const columnsFeedback = [
+    { title: "Product Name", dataIndex: "product", key: "product" },
+    { title: "Rating", dataIndex: "rating", key: "rating" },
+    { title: "Feedback", dataIndex: "feedback", key: "feedback" },
+    { title: "Date", dataIndex: "date", key: "date" },
+  ];
+
+  // Main table columns
   const columns = [
     { title: "SL", dataIndex: "id", key: "id", align: "center" },
     { title: "Customer ID", dataIndex: "id", key: "id", align: "center" },
-    {
-      title: "Customer Name",
-      dataIndex: "businessName",
-      key: "businessName",
-      align: "center",
-    },
+    { title: "Customer Name", dataIndex: "name", key: "name", align: "center" },
+    // {
+    //   title: "Business Name",
+    //   dataIndex: "businessName",
+    //   key: "businessName",
+    //   align: "center",
+    // },
     {
       title: "Phone Number",
       dataIndex: "phone",
@@ -149,159 +171,62 @@ const CustomerManagement = () => {
     { title: "Total Sales", dataIndex: "sales", key: "sales", align: "center" },
     { title: "Status", dataIndex: "status", key: "status", align: "center" },
     {
+      title: "Ratings",
+      dataIndex: "feedback",
+      key: "feedback",
+      align: "center",
+      render: (_, record) => (
+        <Tooltip title="Customer Ratings">
+          <Rate
+            disabled
+            value={record.feedback} // assuming rating is a number from 1 to 5
+            style={{ fontSize: 16, color: "#FFD700" }} // optional styling
+          />
+        </Tooltip>
+      ),
+    },
+    {
       title: "Action",
       key: "action",
       align: "center",
-      with: 120,
       render: (_, record) => (
-        // <div className="flex items-center justify-center">
-        //   <div className="flex gap-2 border border-primary rounded-md p-1">
-        //     <Button
-        //       className="bg-primary !text-white hover:!text-black"
-        //       onClick={() => {
-        //         Swal.fire({
-        //           title: "Are you sure?",
-        //           text: "Do you want to accept this sales rep?",
-        //           icon: "question",
-        //           showCancelButton: true,
-        //           confirmButtonColor: "#3085d6",
-        //           cancelButtonColor: "#d33",
-        //           confirmButtonText: "Yes, accept",
-        //         }).then((result) => {
-        //           if (result.isConfirmed) {
-        //             Swal.fire({
-        //               title: "Accepted!",
-        //               text: "The sales rep has been accepted.",
-        //               icon: "success",
-        //               timer: 1500,
-        //               showConfirmButton: false,
-        //             });
-        //             // TODO: Add your actual accept logic here
-        //           }
-        //         });
-        //       }}
-        //     >
-        //       Accept
-        //     </Button>
-
-        //     <Button
-        //       className="bg-red-600 !text-white hover:!text-black"
-        //       onClick={() => {
-        //         Swal.fire({
-        //           title: "Are you sure?",
-        //           text: "Do you want to reject this sales rep?",
-        //           icon: "warning",
-        //           showCancelButton: true,
-        //           confirmButtonColor: "#3085d6",
-        //           cancelButtonColor: "#d33",
-        //           confirmButtonText: "Yes, reject",
-        //         }).then((result) => {
-        //           if (result.isConfirmed) {
-        //             Swal.fire({
-        //               title: "Rejected!",
-        //               text: "The sales rep has been rejected.",
-        //               icon: "success",
-        //               timer: 1500,
-        //               showConfirmButton: false,
-        //             });
-        //             // TODO: Add your actual reject logic here
-        //           }
-        //         });
-        //       }}
-        //     >
-        //       Reject
-        //     </Button>
-        //   </div>
-        // </div>
-
-        <div
-          className="flex gap-2 justify-between align-middle py-[7px] px-[15px] border border-primary rounded-md"
-          style={{ alignItems: "center" }}
-        >
+        // <div className=" py-[12px] border border-primary rounded-md">
+        <div className="flex- gap-2 ">
           <Tooltip title="View Details">
             <button
               onClick={() => showViewModal(record)}
-              className="text-primary hover:text-green-700 text-xl"
+              className="border border-primary px-4 py-1 rounded bg-[#D7F4DE] mr-5"
             >
-              <IoEyeSharp />
+              View Details
             </button>
           </Tooltip>
-
-          <Tooltip title="Delete">
-            <button
-              onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, delete it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    setData(data.filter((item) => item.id !== record.id));
-                    Swal.fire({
-                      title: "Deleted!",
-                      text: "Your record has been deleted.",
-                      icon: "success",
-                    });
-                  }
-                });
-              }}
-              className="text-red-500 hover:text-red-700 text-md"
-            >
-              <FaTrash />
-            </button>
-          </Tooltip>
-
-          <Switch
-            size="small"
-            checked={record.status === "Active"}
-            style={{
-              backgroundColor: record.status === "Active" ? "#3fae6a" : "gray",
-            }}
-            onChange={(checked) => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: `You are about to change status to ${
-                  checked ? "Active" : "Inactive"
-                }.`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, change it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setData((prev) =>
-                    prev.map((item) =>
-                      item.id === record.id
-                        ? { ...item, status: checked ? "Active" : "Inactive" }
-                        : item
-                    )
-                  );
-                  Swal.fire({
-                    title: "Updated!",
-                    text: `Status has been changed to ${
-                      checked ? "Active" : "Inactive"
-                    }.`,
-                    icon: "success",
-                    timer: 1500,
-                    showConfirmButton: false,
-                  });
-                }
-              });
-            }}
-          />
+          {/* <Tooltip title="Customer Ratings">
+              <Rate
+                disabled
+                value={record.rating} // assuming rating is a number from 1 to 5
+                style={{ fontSize: 16, color: "#FFD700" }} // optional styling
+              />
+            </Tooltip> */}
         </div>
+        // </div>
       ),
     },
   ];
 
+  // Filtered data based on search input
+  const filteredData = data.filter((item) => {
+    const search = searchText.toLowerCase();
+    return (
+      item.id.toString().includes(search) ||
+      item.name.toLowerCase().includes(search) ||
+      item.phone.toLowerCase().includes(search) ||
+      item.email.toLowerCase().includes(search)
+    );
+  });
+
   return (
-    <div className="w-full">
-      <div className="flex justify-between flex-col md:flex-row gap-0 items-start md:items-end">
+    <div>
+      <div className="flex justify-between items-end">
         {/* Header */}
         <div className="flex justify-between items-center mb-4 ">
           <div>
@@ -323,9 +248,10 @@ const CustomerManagement = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Customer Table */}
+      <div className="">
         <Table
-          dataSource={data}
+          dataSource={filteredData}
           columns={columns}
           pagination={{ pageSize: 10 }}
           bordered={false}
@@ -333,23 +259,15 @@ const CustomerManagement = () => {
           rowClassName="custom-row"
           components={components}
           className="custom-table"
-          scroll={{ x: "max-content" }}
         />
       </div>
 
       {/* View Details Modal */}
       <Modal
-        // title="Merchant Profile"
         visible={isViewModalVisible}
         onCancel={handleCloseViewModal}
         width={700}
-        footer={
-          [
-            // <Button key="close" type="primary" onClick={handleCloseViewModal}>
-            //   Close
-            // </Button>,
-          ]
-        }
+        footer={[]}
       >
         {selectedRecord && (
           <div>
@@ -366,9 +284,9 @@ const CustomerManagement = () => {
                 <p>
                   <strong>Name:</strong> {selectedRecord.name}
                 </p>
-                <p>
+                {/* <p>
                   <strong>Business Name:</strong> {selectedRecord.businessName}
-                </p>
+                </p> */}
                 <p>
                   <strong>Email:</strong> {selectedRecord.email}
                 </p>
@@ -391,7 +309,7 @@ const CustomerManagement = () => {
                   <strong>Points Balance:</strong> {selectedRecord.sales}
                 </p>
                 <p>
-                  <strong>Tier:</strong> {selectedRecord.businessName}
+                  <strong>Tier:</strong> Gold
                 </p>
               </div>
             </div>
@@ -401,6 +319,33 @@ const CustomerManagement = () => {
               rowKey="orderId"
               pagination={{ pageSize: 5 }}
               className="mt-6"
+            />
+          </div>
+        )}
+      </Modal>
+
+      {/* Feedback Modal */}
+      <Modal
+        visible={isFeedbackModalVisible}
+        onCancel={handleCloseFeedbackModal}
+        width={700}
+        footer={[]}
+      >
+        {selectedRecord && (
+          <div>
+            <h2 className="text-[22px] font-bold text-primary mb-2">
+              Feedback Details
+            </h2>
+            <p className="text-[16px] font-medium mb-4">
+              Customer:{" "}
+              <span className="font-semibold">{selectedRecord.name}</span>
+            </p>
+
+            <Table
+              columns={columnsFeedback}
+              dataSource={selectedRecord.feedback}
+              rowKey="date"
+              pagination={false}
             />
           </div>
         )}

@@ -266,7 +266,7 @@ const SalesRepPortal = () => {
 
   return (
     <div>
-      <div className="flex justify-between flex-col md:flex-row gap-4 items-start md:items-end mb-4">
+      <div className="flex justify-between items-center mb-6 ">
         <div>
           <h1 className="text-[24px] font-bold">Customers Referred</h1>
           <p className="text-[16px] font-normal mt-2">
@@ -295,7 +295,7 @@ const SalesRepPortal = () => {
           components={components}
           className="custom-table"
           rowKey="id"
-          scroll={{ x: "max-content" }}
+          scroll={{ x: 'max-content' }}
         />
       </div>
 

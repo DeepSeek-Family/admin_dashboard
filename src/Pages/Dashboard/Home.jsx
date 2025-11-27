@@ -1,26 +1,17 @@
-import React, { useState } from "react";
-import { FaCalendarDay, FaDollarSign } from "react-icons/fa";
-import { HiMiniUsers } from "react-icons/hi2";
-import { MdArrowUpward, MdOutlineHome } from "react-icons/md";
-import { PiHouseLine } from "react-icons/pi";
-import { Bar } from "react-chartjs-2";
-import LineChart from "./LineChart";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
   BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
   Title,
   Tooltip,
-  Legend,
 } from "chart.js";
+import { useState } from "react";
+import { People, Points, Revenue, Sales } from "../../components/common/Svg";
 import OrderTable from "../../components/home/OrderTable";
-import SalesLeaderBoard from "../../components/home/SalesLeaderBoard";
-import HomeCard from "../../components/home/HomeCard";
-import { Marchant } from "../../components/common/Svg";
-import { People } from "../../components/common/Svg";
-import { Pending } from "../../components/common/Svg";
-import { SubscriptionManagement } from "../../components/common/Svg";
+import { useStatsQuery } from "../../redux/apiSlices/homeSlice";
+import RevenueLineChart from "./LineChart";
 
 ChartJS.register(
   CategoryScale,
@@ -36,6 +27,26 @@ const Home = () => {
   const [selected, setSelected] = useState("Last 7 Days");
 
   const options2 = ["Today", "Last 7 Days", "Last 30 Days", "This Month"];
+
+  // Map selected option to API range parameter
+  const rangeMap = {
+    Today: "1d",
+    "Last 7 Days": "7d",
+    "Last 30 Days": "30d",
+    "This Month": "1m",
+  };
+
+  const selectedRange = rangeMap[selected] || "7d";
+
+  // Fetch overview statistics with range parameter
+  const queryParams = [{ name: "range", value: selectedRange }];
+
+  const {
+    data: statsResp,
+    isLoading: statsLoading,
+    isError: statsError,
+  } = useStatsQuery(queryParams);
+
   const data = {
     labels: [
       "Jan",
@@ -94,34 +105,25 @@ const Home = () => {
     },
   };
 
+  const stats = statsResp?.data || {};
+  const formatNumber = (n) =>
+    typeof n === "number" ? n.toLocaleString() : n || 0;
+
   return (
-    <div className="p-2 md:p-4 space-y-4 md:space-y-6">
-      {/* Home Card */}
-      {/* <div>
-        <HomeCard />
-      </div> */}
-
-      {/* Line Chart Section */}
-      {/* <div className="w-full">
-        <div className="w-full bg-primary p-3 md:p-4 lg:p-6 rounded-lg">
-          <LineChart />
-        </div>
-      </div> */}
-
+    <div className="">
       <div className="flex flex-col xl:flex-row gap-10 rounded-lg">
-        {/* Line Chart Section */}
-        <div className="w-full xl:flex-1 border border-primary rounded-lg p-6">
-          <LineChart />
+        {/* Left: Revenue chart */}
+        <div className="border border-primary rounded-lg xl:w-2/3">
+          <RevenueLineChart />
         </div>
 
-        {/* Card Section */}
+        {/* Right: Statistics header + dropdown */}
         <div className="w-full xl:w-1/3 border border-primary p-6 rounded-lg">
           <div className="flex justify-between items-center mb-4 text-white">
             <h2 className="text-secondary mt-4 text-[24px] font-bold">
               Statistics
             </h2>
             <div className="relative inline-block w-[150px]">
-              {/* Dropdown Button */}
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full font-medium text-[14px] py-[12px] px-[16px] border border-primary text-secondary rounded-lg text-left flex justify-between items-center"
@@ -130,7 +132,6 @@ const Home = () => {
                 <span className="ml-2">▼</span>
               </button>
 
-              {/* Dropdown Options */}
               {isOpen && (
                 <ul className="absolute z-10 w-full bg-white border border-primary rounded-lg mt-1 shadow-lg">
                   {options2.map((option) => (
@@ -150,62 +151,67 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 h-[240px]">
-            <div className="bg-white border border-primary rounded-lg flex items-center justify-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-auto">
+            {/* Cards */}
+            <div className="bg-white border border-primary rounded-lg flex items-center justify-center p-4">
               <div className="flex flex-col items-baseline">
-                <h2 className="text-center text-[16px] font-semibold mb-1">
-                  Total Shift Completed
+                <h2 className="text-[16px] font-semibold mb-1">
+                  Total Submission
                 </h2>
-                <h3 className="text-secondary text-[24px] text-center font-semibold flex items-center gap-3">
-                  {/* <Marchant className="w-[20px] h-[20px] text-secondary" /> */}
-                  2300
+                <h3 className="text-secondary text-[24px] font-semibold flex items-center gap-3">
+                  <Sales className="w-[20px] h-[20px] text-secondary" />
+                  {statsLoading
+                    ? "..."
+                    : formatNumber(stats.totalSubmissionCount)}
                 </h3>
               </div>
             </div>
 
-            <div className="bg-white border border-primary rounded-lg flex items-center justify-center">
+            <div className="bg-white border border-primary rounded-lg flex items-center justify-center p-4">
               <div className="flex flex-col items-baseline">
-                <h2 className="text-center text-[16px] font-semibold mb-1">
-                  Total User
+                <h2 className="text-[16px] font-semibold mb-1">
+                  Verified User
                 </h2>
-                <h3 className="text-secondary text-[24px] text-center font-semibold flex items-center gap-3">
-                  {/* <People className="w-[20px] h-[20px] text-secondary" /> */}
-                  50000
+                <h3 className="text-secondary text-[24px] font-semibold flex items-center gap-3">
+                  <People className="w-[20px] h-[20px] text-secondary" />
+                  {statsLoading
+                    ? "..."
+                    : formatNumber(stats.totalVerifiedUserCount)}
                 </h3>
               </div>
             </div>
 
-            <div className="bg-white border border-primary rounded-lg flex items-center justify-center">
+            <div className="bg-white border border-primary rounded-lg flex items-center justify-center p-4">
               <div className="flex flex-col items-baseline">
-                <h2 className="text-center text-[16px] font-semibold mb-1">
-                  Total Center
+                <h2 className="text-[16px] font-semibold mb-1">
+                  Pending Report
                 </h2>
-                <h3 className="text-secondary text-[24px] text-center font-semibold flex items-center gap-3">
-                  {/* <Pending className="w-[20px] h-[20px] text-secondary" /> */}
-                  2000
+                <h3 className="text-secondary text-[24px] font-semibold flex items-center gap-3">
+                  <Points className="w-[20px] h-[20px] text-secondary" />
+                  {statsLoading ? "..." : formatNumber(stats.totalPendingCount)}
                 </h3>
               </div>
             </div>
 
-            <div className="bg-white border border-primary rounded-lg flex items-center justify-center">
+            <div className="bg-white border border-primary rounded-lg flex items-center justify-center p-4">
               <div className="flex flex-col items-baseline">
-                <h2 className="text-center text-[16px] font-semibold mb-1">
-                  Subscription Revenue
+                <h2 className="text-[16px] font-semibold mb-1">
+                  Total Revenue
                 </h2>
-                <h3 className="text-secondary text-[24px] text-center font-semibold flex items-center gap-3">
-                  {/* <SubscriptionManagement className="w-[20px] h-[20px] text-secondary" /> */}
-                  $40000
+                <h3 className="text-secondary text-[24px] font-semibold flex items-center gap-3">
+                  <Revenue className="w-[20px] h-[20px] text-secondary" />
+                  {statsLoading
+                    ? "..."
+                    : formatNumber(stats.administrationFund)}
                 </h3>
               </div>
             </div>
           </div>
         </div>
       </div>
-
       {/* Order Table */}
-      <div>
+      <div className="mt-10">
         <OrderTable />
-        {/* <SalesLeaderBoard /> */}
       </div>
     </div>
   );

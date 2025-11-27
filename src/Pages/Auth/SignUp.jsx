@@ -17,10 +17,10 @@ const SignUp = () => {
       {/* Header */}
       <div className="text-center mb-2">
         <img src={image4} alt="logo" className="h-20 w-20 mx-auto" />
-        {/* <h1 className="text-[25px] font-semibold mb-[10px] mt-[20px]">
+        <h1 className="text-[25px] font-semibold mb-[10px] mt-[20px]">
           Merchants Dashboard
-        </h1> */}
-        <p className="mt-6 text-[22px] font-semibold">Create an account</p>
+        </h1>
+        <p>Create an account</p>
       </div>
 
       {/* Form */}
@@ -35,7 +35,7 @@ const SignUp = () => {
             placeholder="Enter your name"
             style={{
               height: 40,
-              border: "1px solid #48B14C",
+              border: "1px solid #3FAE6A",
               borderRadius: "200px",
             }}
           />
@@ -56,7 +56,7 @@ const SignUp = () => {
             placeholder="Enter your phone number"
             style={{
               height: 40,
-              border: "1px solid #48B14C",
+              border: "1px solid #3FAE6A",
               borderRadius: "200px",
             }}
           />
@@ -72,7 +72,7 @@ const SignUp = () => {
             placeholder="Enter your password"
             style={{
               height: 40,
-              border: "1px solid #48B14C",
+              border: "1px solid #3FAE6A",
               borderRadius: "200px",
             }}
           />
@@ -99,7 +99,7 @@ const SignUp = () => {
             placeholder="Confirm your password"
             style={{
               height: 40,
-              border: "1px solid #48B14C",
+              border: "1px solid #3FAE6A",
               borderRadius: "200px",
             }}
           />
@@ -113,12 +113,13 @@ const SignUp = () => {
             style={{
               width: "100%",
               height: 45,
+              color: "white",
               fontWeight: "400px",
               fontSize: "18px",
               marginTop: 20,
               borderRadius: "200px",
             }}
-            className="flex items-center justify-center border border-primary bg-primary rounded-lg hover:bg-white text-white hover:text-primary transition"
+            className="flex items-center justify-center bg-[#3FAE6A] rounded-lg"
           >
             Sign Up
           </button>
@@ -131,7 +132,7 @@ const SignUp = () => {
           Already have an account?{" "}
           <a
             href="/auth/login"
-            className="text-primary hover:text-[#1E1E1E] font-semibold"
+            className="text-[#3FAE6A] hover:text-[#1E1E1E] font-semibold"
           >
             Log in
           </a>

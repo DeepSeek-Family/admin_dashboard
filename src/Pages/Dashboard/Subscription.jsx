@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, Button, Modal, Form, Input, List, message, Select } from "antd";
 import {
   EditOutlined,
+  DeleteOutlined,
   PlusOutlined,
   CheckCircleFilled,
 } from "@ant-design/icons";
@@ -9,11 +10,9 @@ import Swal from "sweetalert2";
 import FeaturedInput from "../../components/common/PackageFeatureInput";
 import GradientButton from "../../components/common/GradiantButton";
 import SubscriptionHeadingIcon from "../../assets/subscription-heading.png";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 
 const PackagesPlans = () => {
+  // Default packages data
   const defaultPackages = [
     {
       id: 1,
@@ -65,16 +64,19 @@ const PackagesPlans = () => {
     },
   ];
 
+  // Local state for packages
   const [packages, setPackages] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentPackage, setCurrentPackage] = useState(null);
   const [form] = Form.useForm();
 
+  // Load default packages on component mount
   useEffect(() => {
     setPackages(defaultPackages);
   }, []);
 
+  // Turn off/on package
   const togglePackageStatus = (id) => {
     setPackages((prev) =>
       prev.map((pkg) => (pkg.id === id ? { ...pkg, active: !pkg.active } : pkg))
@@ -82,6 +84,7 @@ const PackagesPlans = () => {
     message.success("Package status updated");
   };
 
+  // Show modal for adding or editing package
   const showModal = (pkg = null) => {
     setIsEditing(!!pkg);
     setCurrentPackage(pkg);
@@ -101,11 +104,13 @@ const PackagesPlans = () => {
     }
   };
 
+  // Close the modal
   const handleCancel = () => {
     setIsModalOpen(false);
     form.resetFields();
   };
 
+  // Handle delete confirmation
   const handleDelete = async (id) => {
     Swal.fire({
       title: "Are you sure?",
@@ -129,9 +134,10 @@ const PackagesPlans = () => {
     });
   };
 
+  // Handle form submission (Add/Update package)
   const handleSubmit = (values) => {
     const formattedData = {
-      id: isEditing ? currentPackage.id : Date.now(),
+      id: isEditing ? currentPackage.id : Date.now(), // Use timestamp for new package ID
       title: values.title,
       description: values.description,
       price: Number(values.price),
@@ -141,6 +147,7 @@ const PackagesPlans = () => {
     };
 
     if (isEditing) {
+      // Update package
       setPackages(
         packages.map((pkg) =>
           pkg.id === currentPackage.id ? formattedData : pkg
@@ -148,6 +155,7 @@ const PackagesPlans = () => {
       );
       message.success("Package updated successfully");
     } else {
+      // Add new package
       setPackages([...packages, formattedData]);
       message.success("Package added successfully");
     }
@@ -156,6 +164,7 @@ const PackagesPlans = () => {
     form.resetFields();
   };
 
+  // Get card background color based on package popularity
   const getCardStyle = (pkg) => {
     if (pkg.popular) {
       return "shadow-sm rounded-xl  bg-gradient-to-b from-blue-50 to-white hover:shadow-md transition-all transform hover:-translate-y-1";
@@ -163,138 +172,113 @@ const PackagesPlans = () => {
     return "shadow-sm rounded-xl border border-gray-200 bg-white hover:shadow-md transition-all transform hover:-translate-y-1";
   };
 
-  // react-slick settings
-  const settings = {
-    infinite: true,
-    speed: 500,
-    slidesToShow: 3,
-    centerMode: true,
-    centerPadding: "0px",
-    slidesToScroll: 1,
-    focusOnSelect: true,
-    arrows: true,
-    dots: true, // ✅ Enable dots
-    customPaging: (i) => (
-      <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-    ),
-    appendDots: (dots) => (
-      <div style={{ bottom: "-30px" }}>
-        <ul className="flex justify-center gap-2">{dots}</ul>
-      </div>
-    ),
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 1,
-        },
-      },
-    ],
-  };
-
   return (
-    <div className="pt-1 px-4">
+    <div className=" px-4">
       <div className="flex flex-col justify-center items-center mb-8">
-        <p className="bg-primary px-[12px] py-[2px] text-white rounded-3xl mb-2">
+        <p className="bg-primary px-[12px] py-[4px] text-white rounded-3xl mb-2">
           Pricing Plan
         </p>
         <h2 className="text-[38px] font-semibold text-secondary">
           Plans for all sizes
         </h2>
-        {/* <p className="text-[15px] font-normal mb-[10px]">
+        <p className="text-[15px] font-normal mb-[10px]">
           Simple, transparent pricing that grows with you. Try any plan free for
           30 days.
-        </p> */}
-        {/* <Button
+        </p>
+        {/* <GradientButton
           type="primary"
           icon={<PlusOutlined />}
-          className=" text-white rounded-lg shadow-lg hover:bg-[#012F60] transition-all flex items-center"
+          className=" text-white px-5 py-2 h-auto rounded-lg shadow-lg hover:bg-[#012F60] transition-all flex items-center"
           onClick={() => showModal()}
         >
           Add Package
-        </Button> */}
+        </GradientButton> */}
       </div>
-      <div className="flex justify-center">
-        <div className="w-3/4 mb-6">
-          {packages.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p className="text-lg">No packages available.</p>
-              <p>
-                Click the "Add Package" button to create your first package.
-              </p>
-            </div>
-          ) : (
-            <Slider {...settings}>
-              {packages.map((pkg) => (
-                <div key={pkg.id} className="px-4">
-                  <Card
-                    title={null}
-                    bordered={false}
-                    className={`${getCardStyle(
-                      pkg
-                    )} transition-transform duration-300`}
-                  >
-                    <div className="flex justify-end mb-2">
-                      <div className="flex gap-2">
-                        <Button
-                          icon={<EditOutlined />}
-                          onClick={() => showModal(pkg)}
-                          className="text-gray-800 border-gray-800 hover:text-primary hover:border-primary"
-                        />
-                      </div>
-                    </div>
 
-                    <div className="flex flex-col justify-center items-center mb-4">
-                      <img
-                        src={SubscriptionHeadingIcon}
-                        alt="Subscription Icon"
-                        className="w-[40px] h-[40px] mb-4"
-                      />
-                      <h3 className="text-[20px] font-semibold text-primary mb-[8px]">
-                        {pkg.title}
-                      </h3>
-                      <div className="mb-2">
-                        <span className="text-secondary font-semibold text-[38px]">
-                          ${pkg.price}/mth
-                        </span>
-                      </div>
-                      <p className="text-[16px] font-normal text-center text-[#667085]">
-                        {pkg.description}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <List
-                        size="small"
-                        dataSource={pkg.features}
-                        renderItem={(feature) => (
-                          <List.Item className="text-gray-700 border-none py-1">
-                            <div className="flex items-start">
-                              <CheckCircleFilled className="text-primary mr-2 mt-1" />
-                              <span>{feature}</span>
-                            </div>
-                          </List.Item>
-                        )}
-                      />
-                    </div>
-
-                    <Button
-                      className={`w-full mt-12 border h-10 ${
-                        pkg.active
-                          ? "border-primary hover:!bg-primary hover:!text-white"
-                          : "border-gray-400 text-white bg-primary hover:!bg-gray-400 hover:!text-white"
-                      }`}
-                      onClick={() => togglePackageStatus(pkg.id)}
-                    >
-                      {pkg.active ? "Turn Off" : "Turn On"}
-                    </Button>
-                  </Card>
-                </div>
-              ))}
-            </Slider>
-          )}
+      {packages.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-lg">No packages available.</p>
+          <p>Click the "Add Package" button to create your first package.</p>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {packages.map((pkg) => (
+            <Card
+              key={pkg.id}
+              title={null}
+              bordered={false}
+              className={getCardStyle(pkg)}
+              extra={null}
+            >
+              <div className="flex justify-end mb-2">
+                <div className="flex gap-2">
+                  {/* <Button
+                    icon={<EditOutlined />}
+                    onClick={() => showModal(pkg)}
+                    className="text-gray-800 border-gray-800 hover:text-primary hover:border-primary"
+                  /> */}
+                  {/* <Button
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDelete(pkg.id)}
+                    className="text-red-600 border-red-300 hover:text-red-800 hover:border-red-500"
+                  /> */}
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-center items-center mb-4">
+                <img
+                  src={SubscriptionHeadingIcon}
+                  alt="Subscription Icon"
+                  className="w-[40px] h-[40px] mb-4"
+                />
+                <h3 className="text-[20px] font-semibold text-primary mb-[8px]">
+                  {pkg.title}
+                </h3>
+                <div className="mb-2">
+                  <span className="text-secondary font-semibold text-[38px]">
+                    ${pkg.price}/mth
+                  </span>
+                  {/* <span className="text-gray-500 ml-2">/ {pkg.duration}</span> */}
+                </div>
+                <p className="text-[16px] font-normal text-center text-[#667085]">
+                  {pkg.description}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                {/* <h4 className="font-semibold text-gray-700 mb-2">
+                  Features Include:
+                </h4> */}
+                <List
+                  size="small"
+                  dataSource={pkg.features}
+                  renderItem={(feature) => (
+                    <List.Item className="text-gray-700 border-none py-1">
+                      <div className="flex items-start">
+                        <CheckCircleFilled className="text-green-500 mr-2 mt-1" />
+                        <span>{feature}</span>
+                      </div>
+                    </List.Item>
+                  )}
+                />
+              </div>
+              <Button className="w-full mt-12 border bg-[#D7F4DE] border-primary hover:!bg-primary hover:!text-white p-5 text-[16px] font-medium">
+                Get Started
+              </Button>
+              {/* <Button
+                className={`w-full mt-12 border ${
+                  pkg.active
+                    ? "border-primary hover:!bg-primary hover:!text-white"
+                    : "border-gray-400 text-gray-400 hover:!bg-gray-400 hover:!text-white"
+                }`}
+                onClick={() => togglePackageStatus(pkg.id)}
+              >
+                {pkg.active ? "Turn Off" : "Turn On"}
+              </Button> */}
+            </Card>
+          ))}
+        </div>
+      )}
 
       <Modal
         title={isEditing ? "Edit Package" : "Add Package"}
@@ -349,13 +333,26 @@ const PackagesPlans = () => {
 
           <Form.Item
             name="features"
-            label="Features"
+            label="Features (one per line)"
             rules={[
               { required: true, message: "At least one feature is required" },
             ]}
           >
             <FeaturedInput />
           </Form.Item>
+
+          {/* <Form.Item name="popular" valuePropName="checked" className="mb-6">
+            <div className="flex items-center">
+              <span className="mr-2">Mark as Popular:</span>
+              <Select defaultValue={false} style={{ width: 120 }}>
+                <Select.Option value={false}>No</Select.Option>
+                <Select.Option value={true}>Yes</Select.Option>
+              </Select>
+              <span className="ml-2 text-gray-500 text-sm">
+                (Displays a special ribbon)
+              </span>
+            </div>
+          </Form.Item> */}
 
           <div className="flex justify-end gap-3 mt-6">
             <Button

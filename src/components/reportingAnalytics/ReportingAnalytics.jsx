@@ -1,31 +1,42 @@
-import React, { useState, useMemo } from "react";
+import { Alert, DatePicker, Select, Spin, Table } from "antd";
+import "antd/dist/reset.css";
+import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+import { useMemo, useState } from "react";
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  AreaChart,
   Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
-import { Table, Select, Button, DatePicker } from "antd";
-import "antd/dist/reset.css";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import { useAnalyticsQuery } from "../../redux/apiSlices/reportSlice";
 
-import dayjs from "dayjs";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-
-// ✅ Extend dayjs with the plugins
-dayjs.extend(isSameOrAfter);
-dayjs.extend(isSameOrBefore);
+// enable isBetween plugin for dayjs
+dayjs.extend(isBetween);
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+
+// helper: format number with thousand separators and put $ on the right
+function formatCurrencyRight(value) {
+  if (value === null || value === undefined || value === "") return "";
+  const num = Number(value);
+  if (Number.isNaN(num)) return `${value} $`;
+  return `${num.toLocaleString()} $`;
+}
+
+function tooltipFormatter(value, name) {
+  if (name === "revenue") return formatCurrencyRight(value);
+  return value;
+}
 
 const components = {
   header: {
@@ -60,112 +71,124 @@ const components = {
 // Sample data
 const data = [
   {
-    sl: 1,
     date: "Jan 2025",
     category: "Employee",
     region: "USA",
-    "Subscription Revenue": 100,
-    Employee: 65,
-    Client: 32,
+    revenue: 100,
+    users: 65,
+    submission: 32,
   },
   {
-    sl: 2,
     date: "Feb 2025",
     category: "Employee",
     region: "USA",
-    "Subscription Revenue": 75,
-    Employee: 60,
-    Client: 27,
+    revenue: 75,
+    users: 60,
+    submission: 27,
   },
   {
-    sl: 3,
     date: "Mar 2025",
     category: "Employee",
     region: "USA",
-    "Subscription Revenue": 50,
-    Employee: 62,
-    Client: 22,
+    revenue: 50,
+    users: 62,
+    submission: 22,
   },
   {
-    sl: 4,
     date: "Apr 2025",
     category: "Employee",
     region: "UK",
-    "Subscription Revenue": 69,
-    Employee: 54,
-    Client: 29,
+    revenue: 69,
+    users: 54,
+    submission: 29,
   },
   {
-    sl: 5,
     date: "May 2025",
     category: "Employee",
     region: "UK",
-    "Subscription Revenue": 47,
-    Employee: 59,
-    Client: 24,
+    revenue: 47,
+    users: 59,
+    submission: 24,
   },
   {
-    sl: 6,
     date: "Jun 2025",
     category: "Employee",
     region: "UK",
-    "Subscription Revenue": 60,
-    Employee: 68,
-    Client: 37,
+    revenue: 60,
+    users: 68,
+    submission: 37,
   },
   {
-    sl: 7,
     date: "Jul 2025",
     category: "Employee",
     region: "USA",
-    "Subscription Revenue": 88,
-    Employee: 57,
-    Client: 45,
+    revenue: 88,
+    users: 57,
+    submission: 45,
   },
   {
-    sl: 8,
     date: "Aug 2025",
     category: "Employee",
     region: "USA",
-    "Subscription Revenue": 88,
-    Employee: 57,
-    Client: 45,
+    revenue: 88,
+    users: 57,
+    submission: 45,
   },
   {
-    sl: 9,
     date: "Sep 2025",
     category: "Customer",
     region: "UK",
-    "Subscription Revenue": 38,
-    Employee: 57,
-    Client: 100,
+    revenue: 38,
+    users: 57,
+    submission: 100,
   },
   {
-    sl: 10,
     date: "Oct 2025",
     category: "Customer",
     region: "UK",
-    "Subscription Revenue": 88,
-    Employee: 57,
-    Client: 45,
+    revenue: 88,
+    users: 57,
+    submission: 45,
   },
   {
-    sl: 11,
     date: "Nov 2025",
     category: "Customer",
     region: "USA",
-    "Subscription Revenue": 88,
-    Employee: 57,
-    Client: 45,
+    revenue: 88,
+    users: 57,
+    submission: 45,
   },
   {
-    sl: 12,
     date: "Dec 2025",
     category: "Customer",
     region: "USA",
-    "Subscription Revenue": 88,
-    Employee: 57,
-    Client: 45,
+    revenue: 88,
+    users: 57,
+    submission: 45,
+  },
+  {
+    date: "Jan 2026",
+    category: "Partner",
+    region: "Canada",
+    revenue: 95,
+    users: 72,
+    submission: 38,
+  },
+  {
+    date: "Feb 2026",
+    category: "Partner",
+    region: "Canada",
+    revenue: 82,
+    users: 68,
+    submission: 41,
+  },
+  {
+    date: "Mar 2026",
+    category: "Vendor",
+    region: "Australia",
+    revenue: 76,
+    users: 63,
+    submission: 35,
   },
 ];
 
@@ -176,14 +199,12 @@ const categoryOptions = [
   ...new Set(data.map((d) => d.category)),
 ];
 const regionOptions = ["All Regions", ...new Set(data.map((d) => d.region))];
-const metricOptions = ["Subscription Revenue", "Employee", "Client"];
+const metricOptions = ["revenue", "users", "submission"];
 
 const maxValues = {
-  "Subscription Revenue": Math.max(
-    ...data.map((d) => d["Subscription Revenue"])
-  ),
-  Employee: Math.max(...data.map((d) => d.Employee)),
-  Client: Math.max(...data.map((d) => d.Client)),
+  revenue: Math.max(...data.map((d) => d.revenue)),
+  users: Math.max(...data.map((d) => d.users)),
+  submission: Math.max(...data.map((d) => d.submission)),
 };
 
 // Custom 3D Bar with watermark
@@ -254,76 +275,235 @@ const Custom3DBarWithWatermark = ({
 };
 
 export default function MonthlyStatsChart() {
-  const [dateRange, setDateRange] = useState([
-    dayjs("2025-01-01"),
-    dayjs("2025-12-31"),
-  ]);
+  const [selectedMonthYear, setSelectedMonthYear] = useState("All Months");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedRegion, setSelectedRegion] = useState("All Regions");
   const [selectedMetric, setSelectedMetric] = useState("all");
   const [chartType, setChartType] = useState("Bar");
+  // default to current year (Jan - Dec) so we show this year's data on first load
+  const [dateRange, setDateRange] = useState([
+    dayjs().startOf("year"),
+    dayjs().endOf("year"),
+  ]);
+
+  const exportToCSV = () => {
+    const headers = [
+      "Date",
+      "Category",
+      "Region",
+      "Revenue",
+      "Users",
+      "Submission",
+    ];
+    const csvContent = [
+      headers.join(","),
+      ...filteredData.map((row) =>
+        [
+          row.date,
+          row.category,
+          row.region,
+          row.revenue,
+          row.users,
+          row.submission,
+        ].join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `analytics-report-${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Prepare API params from dateRange
+  const startDate =
+    dateRange && dateRange[0] ? dayjs(dateRange[0]).format("YYYY-MM-DD") : null;
+  const endDate =
+    dateRange && dateRange[1] ? dayjs(dateRange[1]).format("YYYY-MM-DD") : null;
+
+  const {
+    data: analyticsResp,
+    isLoading: analyticsLoading,
+    isError: analyticsError,
+  } = useAnalyticsQuery(
+    { startDate, endDate },
+    { skip: !startDate || !endDate }
+  );
+
+  // Map analyticsResp to apiData shape used by the component
+  const apiData =
+    analyticsResp?.data && Array.isArray(analyticsResp.data)
+      ? analyticsResp.data.map((m) => {
+          // choose year between start and end that places the month inside range; fallback to startDate year
+          const startYear = startDate
+            ? dayjs(startDate).year()
+            : dayjs().year();
+          const endYear = endDate ? dayjs(endDate).year() : startYear;
+          let chosenYear = startYear;
+          for (let y = startYear; y <= endYear; y++) {
+            const candidate = dayjs(`${m.month} ${y}`, "MMM YYYY");
+            if (startDate && endDate) {
+              if (
+                candidate.isBetween(
+                  dayjs(startDate),
+                  dayjs(endDate),
+                  "day",
+                  "[]"
+                )
+              ) {
+                chosenYear = y;
+                break;
+              }
+            }
+          }
+          const dateStr = `${m.month} ${chosenYear}`;
+          return {
+            date: dateStr,
+            category: "API",
+            region: "API",
+            revenue: m.totalRevenue,
+            users: m.totalVerifiedUserCount,
+            submission: m.totalSubmissionCount,
+            _dateObj: dayjs(dateStr, "MMM YYYY"),
+          };
+        })
+      : analyticsResp
+      ? []
+      : null;
 
   const filteredData = useMemo(() => {
-    return data.filter((d) => {
-      const currentMonth = dayjs(d.date, "MMM YYYY");
+    // Use API data only. apiData === null -> not fetched yet; [] -> fetched but empty.
+    const sourceRaw = apiData || [];
+    const source = sourceRaw.map((item) => ({
+      ...item,
+      _dateObj: item._dateObj || dayjs(item.date, "MMM YYYY"),
+    }));
 
-      // Guard if dateRange is not set
-      if (!dateRange || !dateRange[0] || !dateRange[1]) return true;
+    return source.filter((d) => {
+      // Category filter
+      const categoryMatch =
+        selectedCategory === "All Categories" ||
+        d.category === selectedCategory;
 
-      return (
-        currentMonth.isSameOrAfter(dateRange[0], "month") &&
-        currentMonth.isSameOrBefore(dateRange[1], "month") &&
-        (selectedCategory === "All Categories" ||
-          d.category === selectedCategory) &&
-        (selectedRegion === "All Regions" || d.region === selectedRegion)
-      );
+      // Region filter
+      const regionMatch =
+        selectedRegion === "All Regions" || d.region === selectedRegion;
+
+      // Month/Year filter
+      const monthYearMatch =
+        selectedMonthYear === "All Months" || d.date === selectedMonthYear;
+
+      // Date range filter
+      let dateRangeMatch = true;
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        const itemDate = d._dateObj || dayjs(d.date, "MMM YYYY");
+        const startDate = dayjs(dateRange[0]);
+        const endDate = dayjs(dateRange[1]);
+        // compare by day range to include months partially covered
+        dateRangeMatch = itemDate.isBetween(startDate, endDate, "day", "[]");
+      }
+
+      return categoryMatch && regionMatch && monthYearMatch && dateRangeMatch;
     });
-  }, [dateRange, selectedCategory, selectedRegion]);
+  }, [selectedCategory, selectedRegion, selectedMonthYear, dateRange, apiData]);
 
   const columns = [
+    { title: "Date", dataIndex: "date", key: "date" },
+    // { title: "Category", dataIndex: "category", key: "category" },
+    // { title: "Region", dataIndex: "region", key: "region" },
     {
-      title: "SL",
-      dataIndex: "sl",
-      key: "sl",
-      align: "center",
-      render: (_, __, index) => index + 1,
+      title: "Revenue",
+      dataIndex: "revenue",
+      key: "revenue",
+      render: (val) => formatCurrencyRight(val),
     },
-    { title: "Date", dataIndex: "date", key: "date", align: "center" },
-    {
-      title: "Subscription Revenue",
-      dataIndex: "Subscription Revenue",
-      key: "Subscription Revenue",
-      align: "center",
-    },
-    {
-      title: "Employee",
-      dataIndex: "Employee",
-      key: "Employee",
-      align: "center",
-    },
-    { title: "Client", dataIndex: "Client", key: "Client", align: "center" },
+    { title: "Users", dataIndex: "users", key: "users" },
+    { title: "Submission", dataIndex: "submission", key: "submission" },
   ];
 
   return (
-    <div style={{ width: "100%", padding: "1rem" }}>
-      {/* Filters */}
-      <div
-        style={{
-          display: "flex",
-          gap: "1rem",
-          marginBottom: "1rem",
-          flexWrap: "wrap",
-        }}
-      >
+    <div className="w-full max-w-full overflow-hidden">
+      {/* Dropdowns */}
+      <div className="flex flex-wrap gap-4 mb-4 items-center">
         <RangePicker
-          picker="month"
-          value={dateRange}
-          onChange={(values) => setDateRange(values || [])}
+          className="min-w-[200px] sm:w-[250px]"
+          placeholder={["Start Date", "End Date"]}
+          onChange={setDateRange}
+          format="MMM YYYY"
         />
 
+        {/* Loading / empty / error states */}
+        {analyticsLoading && (
+          <div className="ml-4">
+            <Spin />
+          </div>
+        )}
+
+        {!analyticsLoading && analyticsError && (
+          <div className="ml-4" style={{ minWidth: 260 }}>
+            <Alert type="error" message="Failed to load analytics" showIcon />
+          </div>
+        )}
+
+        {!analyticsLoading && apiData === null && (
+          <div className="ml-4" style={{ minWidth: 300 }}>
+            <Alert
+              type="info"
+              message="Select start & end month to load analytics"
+              showIcon
+            />
+          </div>
+        )}
+
+        {!analyticsLoading &&
+          apiData &&
+          Array.isArray(apiData) &&
+          apiData.length === 0 && (
+            <div className="ml-4" style={{ minWidth: 260 }}>
+              <Alert
+                type="info"
+                message="No analytics data for the selected range"
+                showIcon
+              />
+            </div>
+          )}
+
         {/* <Select
+          value={selectedMonthYear}
+          className="min-w-[120px] sm:w-[150px]"
+          onChange={setSelectedMonthYear}
+        >
+          <Option value="All Months">All Months</Option>
+          {monthYearOptions.map((option) => (
+            <Option key={option} value={option}>
+              {option}
+            </Option>
+          ))}
+        </Select>
+
+        <Select
+          value={selectedCategory}
+          className="min-w-[120px] sm:w-[150px]"
+          onChange={setSelectedCategory}
+        >
+          {categoryOptions.map((option) => (
+            <Option key={option} value={option}>
+              {option}
+            </Option>
+          ))}
+        </Select>
+
+        <Select
           value={selectedRegion}
-          style={{ width: 150 }}
+          className="min-w-[120px] sm:w-[150px]"
           onChange={setSelectedRegion}
         >
           {regionOptions.map((option) => (
@@ -331,14 +511,14 @@ export default function MonthlyStatsChart() {
               {option}
             </Option>
           ))}
-        </Select> */}
+        </Select>
 
         <Select
           value={selectedMetric}
-          style={{ width: 180 }}
+          className="min-w-[120px] sm:w-[150px]"
           onChange={setSelectedMetric}
         >
-          <Option value="all">All Categories</Option>
+          <Option value="all">All Metrics</Option>
           {metricOptions.map((option) => (
             <Option key={option} value={option}>
               {option}
@@ -346,23 +526,23 @@ export default function MonthlyStatsChart() {
           ))}
         </Select>
 
-        {/* <Select
+        <Select
           value={chartType}
-          style={{ width: 150 }}
+          className="min-w-[120px] sm:w-[150px]"
           onChange={setChartType}
         >
           <Option value="Bar">Bar Chart</Option>
           <Option value="Line">Line Chart</Option>
           <Option value="Area">Area Chart</Option>
-        </Select>
+        </Select> */}
 
-        <Button>Export Report</Button> */}
+        {/* <Button className="bg-primary text-white" onClick={exportToCSV}>Export Report</Button> */}
       </div>
 
       {/* Chart */}
       <div
-        className="p-4 rounded-lg border"
-        style={{ width: "100%", height: 400, marginTop: "40px" }}
+        className="p-4 rounded-lg border w-full mt-10 overflow-x-auto"
+        style={{ height: 400 }}
       >
         <ResponsiveContainer>
           {chartType === "Bar" ? (
@@ -374,37 +554,38 @@ export default function MonthlyStatsChart() {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
+              {selectedMetric === "revenue" ? (
+                <YAxis tickFormatter={(v) => formatCurrencyRight(v)} />
+              ) : (
+                <YAxis />
+              )}
+              <Tooltip formatter={tooltipFormatter} />
               <Legend />
-              {(selectedMetric === "all" ||
-                selectedMetric === "Subscription Revenue") && (
+              {(selectedMetric === "all" || selectedMetric === "revenue") && (
                 <Bar
-                  dataKey="Subscription Revenue"
+                  dataKey="revenue"
                   fill="#7086FD"
                   shape={(props) => (
-                    <Custom3DBarWithWatermark
-                      {...props}
-                      dataKey="Subscription Revenue"
-                    />
+                    <Custom3DBarWithWatermark {...props} dataKey="revenue" />
                   )}
                 />
               )}
-              {(selectedMetric === "all" || selectedMetric === "Employee") && (
+              {(selectedMetric === "all" || selectedMetric === "users") && (
                 <Bar
-                  dataKey="Employee"
+                  dataKey="users"
                   fill="#6FD195"
                   shape={(props) => (
-                    <Custom3DBarWithWatermark {...props} dataKey="Employee" />
+                    <Custom3DBarWithWatermark {...props} dataKey="users" />
                   )}
                 />
               )}
-              {(selectedMetric === "all" || selectedMetric === "Client") && (
+              {(selectedMetric === "all" ||
+                selectedMetric === "submission") && (
                 <Bar
-                  dataKey="Client"
+                  dataKey="submission"
                   fill="#FFAE4C"
                   shape={(props) => (
-                    <Custom3DBarWithWatermark {...props} dataKey="Client" />
+                    <Custom3DBarWithWatermark {...props} dataKey="submission" />
                   )}
                 />
               )}
@@ -416,22 +597,22 @@ export default function MonthlyStatsChart() {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
+              {selectedMetric === "revenue" ? (
+                <YAxis tickFormatter={(v) => formatCurrencyRight(v)} />
+              ) : (
+                <YAxis />
+              )}
+              <Tooltip formatter={tooltipFormatter} />
               <Legend />
+              {(selectedMetric === "all" || selectedMetric === "revenue") && (
+                <Line type="monotone" dataKey="revenue" stroke="#7086FD" />
+              )}
+              {(selectedMetric === "all" || selectedMetric === "users") && (
+                <Line type="monotone" dataKey="users" stroke="#6FD195" />
+              )}
               {(selectedMetric === "all" ||
-                selectedMetric === "Subscription Revenue") && (
-                <Line
-                  type="monotone"
-                  dataKey="Subscription Revenue"
-                  stroke="#7086FD"
-                />
-              )}
-              {(selectedMetric === "all" || selectedMetric === "Employee") && (
-                <Line type="monotone" dataKey="Employee" stroke="#6FD195" />
-              )}
-              {(selectedMetric === "all" || selectedMetric === "Client") && (
-                <Line type="monotone" dataKey="Client" stroke="#FFAE4C" />
+                selectedMetric === "submission") && (
+                <Line type="monotone" dataKey="submission" stroke="#FFAE4C" />
               )}
             </LineChart>
           ) : (
@@ -441,30 +622,34 @@ export default function MonthlyStatsChart() {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
+              {selectedMetric === "revenue" ? (
+                <YAxis tickFormatter={(v) => formatCurrencyRight(v)} />
+              ) : (
+                <YAxis />
+              )}
+              <Tooltip formatter={tooltipFormatter} />
               <Legend />
-              {(selectedMetric === "all" ||
-                selectedMetric === "Subscription Revenue") && (
+              {(selectedMetric === "all" || selectedMetric === "revenue") && (
                 <Area
                   type="monotone"
-                  dataKey="Subscription Revenue"
+                  dataKey="revenue"
                   stroke="#7086FD"
                   fill="#7086FD"
                 />
               )}
-              {(selectedMetric === "all" || selectedMetric === "Employee") && (
+              {(selectedMetric === "all" || selectedMetric === "users") && (
                 <Area
                   type="monotone"
-                  dataKey="Employee"
+                  dataKey="users"
                   stroke="#6FD195"
                   fill="#6FD195"
                 />
               )}
-              {(selectedMetric === "all" || selectedMetric === "Client") && (
+              {(selectedMetric === "all" ||
+                selectedMetric === "submission") && (
                 <Area
                   type="monotone"
-                  dataKey="Client"
+                  dataKey="submission"
                   stroke="#FFAE4C"
                   fill="#FFAE4C"
                 />
@@ -475,25 +660,39 @@ export default function MonthlyStatsChart() {
       </div>
 
       {/* Ant Design Table */}
-      {/* <div style={{ marginTop: "50px" }}>
-        <h1 className="text-[22px] font-bold mb-2">Data Table</h1>
-        <Table
-          bordered={false}
-          size="small"
-          rowClassName="custom-row"
-          components={components}
-          className="custom-table"
-          columns={columns.filter(
-            (col) =>
-              selectedMetric === "all" || col.dataIndex === selectedMetric
-          )}
-          dataSource={filteredData.map((row, index) => ({
-            ...row,
-            key: index,
-          }))}
-          pagination={{ pageSize: 6 }}
-        />
-      </div> */}
+      <div className="mt-12">
+        <h1 className="text-lg sm:text-xl lg:text-[22px] font-bold mb-4">
+          Data Table
+        </h1>
+        <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
+          <Table
+            bordered={false}
+            size="small"
+            rowClassName="custom-row"
+            components={components}
+            className="custom-table min-w-full"
+            scroll={{ x: "max-content" }}
+            columns={columns.filter(
+              (col) =>
+                col.dataIndex === "date" ||
+                col.dataIndex === "category" ||
+                col.dataIndex === "region" ||
+                selectedMetric === "all" ||
+                col.dataIndex === selectedMetric
+            )}
+            dataSource={filteredData.map((row, index) => ({
+              ...row,
+              key: index,
+            }))}
+            pagination={{
+              pageSize: 6,
+              showSizeChanger: false,
+              showQuickJumper: false,
+              responsive: true,
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,12 +1,17 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Table, Button, Form, Input, Select, Spin } from "antd";
-import Swal from "sweetalert2";
-import UserModal from "./UserModal";
+import React, { useState } from "react";
 import {
-  useGetAllUsersQuery,
-  useUpdateUserStatusAsAdminMutation,
-} from "../../redux/apiSlices/userSlice";
-import toast from "react-hot-toast";
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Tooltip,
+  Switch,
+  Select,
+} from "antd";
+import { FaTrash } from "react-icons/fa";
+import { EditOutlined } from "@ant-design/icons";
+import Swal from "sweetalert2";
 
 const { Option } = Select;
 
@@ -41,272 +46,254 @@ const components = {
 };
 
 const LoginCredentials = () => {
-  // ✅ Query hook theke refetch destructure kora hoise
-  const { data: usersData, isLoading, refetch } = useGetAllUsersQuery();
-  const [updateUserStatus, { isLoading: isUpdating }] =
-    useUpdateUserStatusAsAdminMutation();
+  const [data, setData] = useState([
+    {
+      id: 1,
+      name: "Alice Johnson",
+      email: "alice@email.com",
+      password: "123456",
+      phone: "+1234567890",
+      role: "Admin",
+      createdAt: "2025-08-01",
+      status: "Active",
+    },
+    {
+      id: 2,
+      name: "John Doe",
+      email: "john@email.com",
+      password: "123456",
+      phone: "+9876543210",
+      role: "User",
+      createdAt: "2025-08-05",
+      status: "Inactive",
+    },
+  ]);
 
-  const [activeTab, setActiveTab] = useState("Employee");
-  const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [roles] = useState(["Admin", "User", "Client"]);
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [roles, setRoles] = useState(["Admin", "User"]); // Default roles
+
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
-  const [modalForm] = Form.useForm();
-  const [isEdit, setIsEdit] = useState(false);
-  const [searchText, setSearchText] = useState("");
-  const [tableLoading, setTableLoading] = useState(false);
+  const [viewForm] = Form.useForm();
 
-  // Memoized employee/client data
-  const employeeData = useMemo(
-    () => usersData?.data.filter((user) => user?.role === "EMPLOYEE") || [],
-    [usersData]
-  );
-  const clientData = useMemo(
-    () => usersData?.data.filter((user) => user?.role === "CLIENT") || [],
-    [usersData]
-  );
+  const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
+  const [roleForm] = Form.useForm();
 
-  // Update data when tab changes
-  useEffect(() => {
-    setTableLoading(true);
-    const updateData = activeTab === "Employee" ? employeeData : clientData;
-    setData(updateData);
-    setFilteredData(updateData);
-    setTimeout(() => setTableLoading(false), 200);
-  }, [activeTab, employeeData, clientData]);
+  const [isUserModalVisible, setIsUserModalVisible] = useState(false);
+  const [userForm] = Form.useForm();
 
-  // Filter by isActive status
-  useEffect(() => {
-    if (filterStatus === "All") setFilteredData(data);
-    else
-      setFilteredData(
-        data.filter((item) =>
-          filterStatus === "Active"
-            ? item.isActive === true
-            : item.isActive === false
+  // View/Edit User Modal
+  const showViewModal = (record) => {
+    setSelectedRecord(record);
+    viewForm.setFieldsValue(record);
+    setIsViewModalVisible(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalVisible(false);
+    setSelectedRecord(null);
+  };
+
+  const handleUpdateRecord = () => {
+    viewForm.validateFields().then((values) => {
+      setData((prev) =>
+        prev.map((item) =>
+          item.id === selectedRecord.id ? { ...item, ...values } : item
         )
       );
-  }, [data, filterStatus]);
-
-  // Function to get location from lat/lon
-  const getPlaceName = async (latitude, longitude) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-      );
-      const data = await response.json();
-      return data?.display_name || "Unknown Location";
-    } catch (error) {
-      console.error("Error fetching location:", error);
-      return "Unknown Location";
-    }
+      Swal.fire({
+        title: "Updated!",
+        text: "User details have been updated successfully.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      setIsViewModalVisible(false);
+    });
   };
 
-  // Fetch locations for users
-  useEffect(() => {
-    if (!usersData) return;
-    const updateData = activeTab === "Employee" ? employeeData : clientData;
-    setTableLoading(true);
-
-    const fetchLocations = async () => {
-      const updatedData = await Promise.all(
-        updateData.map(async (user) => {
-          if (user.latitude && user.longitude) {
-            const placeName = await getPlaceName(user.latitude, user.longitude);
-            return { ...user, locationName: placeName };
-          }
-          return { ...user, locationName: "N/A" };
-        })
-      );
-      setData(updatedData);
-      setFilteredData(updatedData);
-      setTableLoading(false);
-    };
-
-    fetchLocations();
-  }, [usersData, activeTab]);
-
-  // Save button action (modal)
-  const handleSave = () => {
-    toast.success("Changes saved successfully!");
+  // Add Role
+  const handleAddRole = () => {
+    roleForm.validateFields().then((values) => {
+      setRoles((prev) => [...prev, values.roleName]);
+      Swal.fire({
+        title: "Role Added!",
+        text: `Role "${values.roleName}" has been successfully added.`,
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      roleForm.resetFields();
+      setIsRoleModalVisible(false);
+    });
   };
 
-  // Tab toggle
-  const toggleTab = (tab) => setActiveTab(tab);
+  // Add New User
+  const handleAddUser = () => {
+    userForm.validateFields().then((values) => {
+      const newUser = {
+        id: data.length + 1,
+        status: "Active",
+        createdAt: new Date().toISOString().split("T")[0],
+        ...values,
+      };
+      setData((prev) => [...prev, newUser]);
+      Swal.fire({
+        title: "User Added!",
+        text: `${values.name} has been added successfully.`,
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      userForm.resetFields();
+      setIsUserModalVisible(false);
+    });
+  };
 
-  // Table columns
   const columns = [
-    {
-      title: "SL",
-      dataIndex: "id",
-      key: "id",
-      render: (_, __, index) => index + 1,
-      align: "center",
-    },
+    { title: "SL", dataIndex: "id", key: "id", align: "center" },
     { title: "User Name", dataIndex: "name", key: "name", align: "center" },
     { title: "Email", dataIndex: "email", key: "email", align: "center" },
     {
-      title: "Location",
-      dataIndex: "locationName",
-      key: "location",
+      title: "Password",
+      dataIndex: "password",
+      key: "password",
       align: "center",
-      render: (text) => <span>{text}</span>,
     },
     {
-      title: "Joining Date",
+      title: "Phone Number",
+      dataIndex: "phone",
+      key: "phone",
+      align: "center",
+    },
+    { title: "Role", dataIndex: "role", key: "role", align: "center" },
+    {
+      title: "Created At",
       dataIndex: "createdAt",
-      key: "joiningDate",
+      key: "createdAt",
       align: "center",
-      render: (value) => {
-        if (!value) return "N/A";
-        const date = new Date(value);
-        return date.toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        });
-      },
     },
-    ...(activeTab === "Employee"
-      ? [
-          {
-            title: "Shift Completed",
-            dataIndex: "shiftCompleted",
-            key: "shiftCompleted",
-            align: "center",
-          },
-        ]
-      : []),
-    {
-      title: "Status",
-      dataIndex: "isActive",
-      key: "status",
-      align: "center",
-      render: (value) => (value ? "Active" : "Inactive"),
-    },
+    { title: "Status", dataIndex: "status", key: "status", align: "center" },
     {
       title: "Action",
       key: "action",
       align: "center",
-      width: 150,
       render: (_, record) => (
-        <Button
-          type={record.isActive ? "primary" : "default"}
-          style={{ width: 100 }}
-          loading={isUpdating}
-          onClick={async () => {
-            const newStatus = !record.isActive;
-
-            // Optimistic UI update for better UX
-            setData((prevData) =>
-              prevData.map((user) =>
-                user._id === record._id
-                  ? { ...user, isActive: newStatus }
-                  : user
-              )
-            );
-
-            try {
-              // ✅ Correct payload: id + isActive
-              await updateUserStatus({
-                id: record._id,
-                isActive: newStatus,
-              }).unwrap();
-
-              toast.success(
-                `User status updated to ${newStatus ? "Active" : "Inactive"}`
-              );
-
-              // ✅ Force server refresh after mutation
-              refetch();
-            } catch (error) {
-              toast.error("Failed to update user status");
-              console.error("Update Error:", error);
-            }
-          }}
+        <div
+          className="flex gap-0 justify-between align-middle py-[7px] px-[15px] border border-primary rounded-md"
+          style={{ alignItems: "center" }}
         >
-          {record.isActive ? "Active" : "Inactive"}
-        </Button>
+          <Tooltip title="View & Update Details">
+            <button
+              onClick={() => showViewModal(record)}
+              className="text-primary hover:text-green-700 text-xl"
+            >
+              <EditOutlined />
+            </button>
+          </Tooltip>
+
+          <Tooltip title="Delete">
+            <button
+              onClick={() => {
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "You won't be able to revert this!",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#3085d6",
+                  cancelButtonColor: "#d33",
+                  confirmButtonText: "Yes, delete it!",
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setData(data.filter((item) => item.id !== record.id));
+                    Swal.fire({
+                      title: "Deleted!",
+                      text: "Your record has been deleted.",
+                      icon: "success",
+                    });
+                  }
+                });
+              }}
+              className="text-red-500 hover:text-red-700 text-md"
+            >
+              <FaTrash />
+            </button>
+          </Tooltip>
+
+          <Switch
+            size="small"
+            checked={record.status === "Active"}
+            style={{
+              backgroundColor: record.status === "Active" ? "#3fae6a" : "gray",
+            }}
+            onChange={(checked) => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: `You are about to change status to ${
+                  checked ? "Active" : "Inactive"
+                }.`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, change it!",
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  setData((prev) =>
+                    prev.map((item) =>
+                      item.id === record.id
+                        ? { ...item, status: checked ? "Active" : "Inactive" }
+                        : item
+                    )
+                  );
+                  Swal.fire({
+                    title: "Updated!",
+                    text: `Status has been changed to ${
+                      checked ? "Active" : "Inactive"
+                    }.`,
+                    icon: "success",
+                    timer: 1500,
+                    showConfirmButton: false,
+                  });
+                }
+              });
+            }}
+          />
+        </div>
       ),
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-32 w-full">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  console.log("Users Data:", usersData?.data);
-
   return (
     <div>
-      {/* Header Buttons + Filters */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 lg:gap-0 mb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <Button
-            type="primary"
-            onClick={() => toggleTab("Employee")}
-            className={`px-[50px] py-[20px] rounded-lg text-[16px] font-medium ${
-              activeTab === "Employee"
-                ? "bg-primary !text-white border-primary"
-                : "bg-white !text-secondary border-primary hover:bg-primary hover:!text-white"
-            }`}
-          >
-            Employee
-          </Button>
-
-          <Button
-            type="primary"
-            onClick={() => toggleTab("Client")}
-            className={`px-[50px] py-[20px] rounded-lg text-[16px] font-medium ${
-              activeTab === "Client"
-                ? "bg-primary !text-white border-primary"
-                : "bg-white !text-secondary border-primary hover:bg-primary hover:!text-white"
-            }`}
-          >
-            Client
-          </Button>
-
-          {/* Status Filter */}
-          <Select
-            value={filterStatus}
-            onChange={(value) => setFilterStatus(value)}
-            style={{ width: 150, height: 42 }}
-            className="mt-2 sm:mt-0"
-          >
-            <Option value="All">All</Option>
-            <Option value="Active">Active</Option>
-            <Option value="Inactive">Inactive</Option>
-          </Select>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h1 className="text-[24px] font-bold">User Management</h1>
+          <p className="text-[16px] font-normal mt-2">
+            Access your account securely with your login credentials.
+          </p>
         </div>
-
-        {/* Search Box */}
-        <div className="flex flex-col sm:flex-row gap-5 mt-2 lg:mt-0">
-          <Input.Search
-            placeholder="Search"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            enterButton
-            className="custom-search !w-full sm:!w-[400px]"
-          />
+        <div className="flex gap-5">
+          <Button
+            type="primary"
+            onClick={() => setIsUserModalVisible(true)}
+            className="bg-primary !text-white hover:!text-secondary hover:!bg-white hover:!border-primary px-[30px] py-[25px] rounded-full text-[18px] font-bold"
+          >
+            Add New User
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => setIsRoleModalVisible(true)}
+            className="bg-primary !text-white hover:!text-secondary hover:!bg-white hover:!border-primary px-[30px] py-[25px] rounded-full text-[18px] font-bold"
+          >
+            Add New Role
+          </Button>
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <Table
-          dataSource={filteredData}
+          dataSource={data}
           columns={columns}
-          loading={tableLoading}
           pagination={{ pageSize: 10 }}
           bordered={false}
           size="small"
@@ -314,19 +301,133 @@ const LoginCredentials = () => {
           components={components}
           className="custom-table"
           scroll={{ x: "max-content" }}
-          rowKey="_id"
         />
       </div>
 
-      {/* User Modal */}
-      <UserModal
-        visible={isModalVisible}
-        onSave={handleSave}
-        form={modalForm}
-        roles={roles}
-        record={selectedRecord}
-        isEdit={isEdit}
-      />
+      {/* View/Edit User Modal */}
+      <Modal
+        visible={isViewModalVisible}
+        onCancel={handleCloseViewModal}
+        width={700}
+        onOk={handleUpdateRecord}
+        okText="Save Changes"
+      >
+        {selectedRecord && (
+          <div className="flex flex-col gap-2 w-full border border-primary rounded-md p-4 mt-8 mb-8">
+            <p className="text-[22px] font-bold text-primary">
+              User Management
+            </p>
+            <Form form={viewForm} layout="vertical">
+              <Form.Item name="name" label="User Name">
+                <Input />
+              </Form.Item>
+              <Form.Item name="email" label="Email">
+                <Input />
+              </Form.Item>
+              <Form.Item name="password" label="Password">
+                <Input />
+              </Form.Item>
+              <Form.Item name="phone" label="Phone Number">
+                <Input />
+              </Form.Item>
+              <Form.Item name="role" label="Role">
+                <Select>
+                  {roles.map((role) => (
+                    <Option key={role} value={role}>
+                      {role}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item name="status" label="Select Page Access Control">
+                <Select>
+                  <Option value="Active">Full</Option>
+                  <Option value="Inactive">Dashboard</Option>
+                </Select>
+              </Form.Item>
+            </Form>
+          </div>
+        )}
+      </Modal>
+
+      {/* Add New Role Modal */}
+      <Modal
+        title="Add New Role"
+        visible={isRoleModalVisible}
+        onCancel={() => setIsRoleModalVisible(false)}
+        onOk={handleAddRole}
+        okText="Add Role"
+      >
+        <Form form={roleForm} layout="vertical">
+          <Form.Item
+            name="roleName"
+            label="Role Name"
+            rules={[{ required: true, message: "Please enter role name" }]}
+          >
+            <Input placeholder="Enter role name" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Add New User Modal */}
+      <Modal
+        title="Add New User"
+        visible={isUserModalVisible}
+        onCancel={() => setIsUserModalVisible(false)}
+        onOk={handleAddUser}
+        okText="Add User"
+        width={700}
+      >
+        <Form form={userForm} layout="vertical">
+          <Form.Item
+            name="name"
+            label="User Name"
+            rules={[{ required: true, message: "Please enter name" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[{ required: true, message: "Please enter email" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Password"
+            rules={[{ required: true, message: "Please enter password" }]}
+          >
+            <Input type="password" />
+          </Form.Item>
+          <Form.Item
+            name="phone"
+            label="Phone Number"
+            rules={[{ required: true, message: "Please enter phone number" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="role"
+            label="Role"
+            rules={[{ required: true, message: "Please select a role" }]}
+          >
+            <Select placeholder="Select role">
+              {roles.map((role) => (
+                <Option key={role} value={role}>
+                  {role}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="status" label="Select Page Access Control">
+            <Select>
+              <Option value="Active">Full</Option>
+              <Option value="Inactive">Dashboard</Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

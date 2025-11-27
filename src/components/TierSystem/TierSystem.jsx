@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { Button, Modal, Input, Form, Switch, Tooltip } from "antd";
+import React, { useState, useEffect } from "react";
+import { Button, Modal, Input, Form } from "antd";
 import Swal from "sweetalert2";
 
 export default function TierSystem() {
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
+  const [isRulesModalVisible, setIsRulesModalVisible] = useState(false);
   const [editingTier, setEditingTier] = useState(null);
   const [tiers, setTiers] = useState([
     {
@@ -12,7 +13,7 @@ export default function TierSystem() {
       reward: "10% Off",
       lockoutDuration: 0,
       pointsSystemLockoutDuration: 0,
-      active: true,
+      minSpend: 0,
     },
     {
       name: "Gold",
@@ -20,92 +21,90 @@ export default function TierSystem() {
       reward: "15% Off",
       lockoutDuration: 0,
       pointsSystemLockoutDuration: 0,
-      active: true,
-    },
-    {
-      name: "Premium",
-      threshold: 20000,
-      reward: "20% Off",
-      lockoutDuration: 0,
-      pointsSystemLockoutDuration: 0,
-      active: true,
+      minSpend: 500,
     },
   ]);
+  const [isAddMode, setIsAddMode] = useState(false);
 
-  // Open modal with tier details for edit
-  const showModal = (tier = null) => {
-    setEditingTier(tier);
-    setIsModalVisible(true);
+  // Open Set Rules/Edit Modal
+  const showRulesModal = (tier) => {
+    if (tier) {
+      setEditingTier(tier);
+      setIsAddMode(false);
+      form.setFieldsValue(tier); // fill with existing tier
+    } else {
+      setEditingTier(null);
+      setIsAddMode(true);
+      form.resetFields(); // blank form
+    }
+    setIsRulesModalVisible(true);
   };
 
-  // Close modal
-  const handleCancel = () => {
-    setIsModalVisible(false);
+  // Close Modal
+  const handleCancelRules = () => {
+    setIsRulesModalVisible(false);
     setEditingTier(null);
+    setIsAddMode(false);
+    form.resetFields();
   };
 
-  // Save changes for both new and existing tiers
-  const handleSave = (values) => {
-    if (editingTier) {
-      setTiers((prev) =>
-        prev.map((t) =>
-          t.name === editingTier.name ? { ...t, ...values } : t
-        )
+  // Save Tier (Add/Edit)
+  const handleSaveRules = (values) => {
+    if (isAddMode) {
+      setTiers((prev) => [...prev, values]);
+      Swal.fire(
+        "Added!",
+        `The "${values.name}" tier has been created.`,
+        "success"
       );
     } else {
-      setTiers((prev) => [...prev, { ...values, active: true }]);
+      setTiers((prev) =>
+        prev.map((t) => (t.name === editingTier.name ? { ...t, ...values } : t))
+      );
+      Swal.fire(
+        "Updated!",
+        `The "${values.name}" tier has been updated.`,
+        "success"
+      );
     }
-    setIsModalVisible(false);
-    setEditingTier(null);
+    handleCancelRules();
   };
 
-  // Delete a tier with confirmation
-  const handleDelete = (tierName) => {
+  // Remove Tier
+  const handleRemove = (tierName) => {
     Swal.fire({
       title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      text: `Do you really want to remove the "${tierName}" tier?`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, remove it!",
     }).then((result) => {
       if (result.isConfirmed) {
         setTiers((prev) => prev.filter((t) => t.name !== tierName));
-        Swal.fire({
-          title: "Deleted!",
-          text: "The tier has been deleted.",
-          icon: "success",
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        Swal.fire(
+          "Removed!",
+          `The "${tierName}" tier has been removed.`,
+          "success"
+        );
       }
     });
-  };
-
-  // Toggle tier active status
-  const toggleActive = (tierName) => {
-    setTiers((prev) =>
-      prev.map((t) =>
-        t.name === tierName ? { ...t, active: !t.active } : t
-      )
-    );
   };
 
   return (
     <div>
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 px-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-[24px] font-bold">Point & Tier System</h1>
+          <h1 className="text-[24px] font-bold">Loyalty Program Management</h1>
           <p className="text-[16px] font-normal mt-2">
             Configure your tiers, rewards, and point accumulation rules.
           </p>
         </div>
         <Button
-          type="primary"
-          onClick={() => showModal()}
           className="bg-primary text-white hover:text-secondary font-bold"
+          onClick={() => showRulesModal(null)}
         >
           Add New Tier
         </Button>
@@ -116,35 +115,33 @@ export default function TierSystem() {
         {tiers.map((tier) => (
           <div
             key={tier.name}
-            className="px-6 py-4 rounded-lg border border-primary bg-white flex justify-between items-center"
+            className="px-6 py-4 rounded-lg border border-primary bg-white"
           >
-            <div className="flex flex-col gap-2">
-              <h2 className="font-bold text-[24px] text-secondary">
-                {tier.name} {tier.active ? "" : "(Inactive)"}
-              </h2>
-              <p>Points Threshold: {tier.threshold}</p>
-              <p>Reward: {tier.reward}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={tier.active}
-                onChange={() => toggleActive(tier.name)}
-                checkedChildren="Active"
-                unCheckedChildren="Inactive"
-              />
-              <Button
-                className="bg-primary text-white hover:text-secondary font-bold"
-                onClick={() => showModal(tier)}
-              >
-                Edit
-              </Button>
-              <Button
-                danger
-                onClick={() => handleDelete(tier.name)}
-                className="font-bold"
-              >
-                Delete
-              </Button>
+            <div className="flex justify-between gap-4">
+              <div className="flex flex-col gap-2">
+                <h2 className="font-bold text-[24px] text-secondary">
+                  {tier.name}
+                </h2>
+                <p>
+                  Tier ({tier.name}) Points Threshold: {tier.threshold}
+                </p>
+                <p>Tier Reward: {tier.reward}</p>
+                <p>Min Spend: ${tier.minSpend}</p>
+              </div>
+              <div className="flex gap-4">
+                <Button
+                  className="bg-primary text-white hover:text-secondary font-bold"
+                  onClick={() => showRulesModal(tier)}
+                >
+                  Set Rules
+                </Button>
+                <Button
+                  className="bg-primary text-white hover:text-secondary font-bold"
+                  onClick={() => handleRemove(tier.name)}
+                >
+                  Remove
+                </Button>
+              </div>
             </div>
           </div>
         ))}
@@ -163,17 +160,27 @@ export default function TierSystem() {
         </div>
       </div>
 
-      {/* Ant Design Modal */}
+      {/* Set Rules / Add Tier Modal */}
       <Modal
-        title={editingTier ? `Edit Tier - ${editingTier.name}` : "Add New Tier"}
-        open={isModalVisible}
-        onCancel={handleCancel}
+        title={
+          isAddMode ? "Add New Tier" : `Set Rules - ${editingTier?.name || ""}`
+        }
+        open={isRulesModalVisible}
+        onCancel={handleCancelRules}
         footer={null}
       >
         <Form
+          form={form}
           layout="vertical"
-          initialValues={editingTier || { lockoutDuration: 0, pointsSystemLockoutDuration: 0 }}
-          onFinish={handleSave}
+          initialValues={{
+            name: "",
+            threshold: 0,
+            reward: "",
+            lockoutDuration: 0,
+            pointsSystemLockoutDuration: 0,
+            minSpend: 0,
+          }}
+          onFinish={handleSaveRules}
         >
           <Form.Item
             label="Tier Name"
@@ -197,21 +204,31 @@ export default function TierSystem() {
             <Input />
           </Form.Item>
           <Form.Item
-            label="Tier Lockout Duration (Month)"
+            label="Point accumulation rule"
             name="lockoutDuration"
-            rules={[{ required: true, message: "Please enter lockout duration" }]}
+            rules={[{ required: true, message: "Please enter rule" }]}
           >
             <Input type="number" />
           </Form.Item>
           <Form.Item
-            label="Points System Lockout Duration (Month)"
+            label="Point redemption rule"
             name="pointsSystemLockoutDuration"
-            rules={[{ required: true, message: "Please enter points system lockout duration" }]}
+            rules={[{ required: true, message: "Please enter rule" }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item
+            label="Min Total Spend ($)"
+            name="minSpend"
+            rules={[{ required: true, message: "Please enter min spend" }]}
           >
             <Input type="number" />
           </Form.Item>
           <div className="flex justify-end gap-2">
-            <Button onClick={handleCancel} className="border border-primary">
+            <Button
+              onClick={handleCancelRules}
+              className="border border-primary"
+            >
               Cancel
             </Button>
             <Button
@@ -219,7 +236,7 @@ export default function TierSystem() {
               htmlType="submit"
               className="bg-primary text-white hover:text-secondary font-bold"
             >
-              {editingTier ? "Save Changes" : "Add Tier"}
+              {isAddMode ? "Add Tier" : "Save Changes"}
             </Button>
           </div>
         </Form>

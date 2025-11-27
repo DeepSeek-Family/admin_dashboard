@@ -22,71 +22,11 @@ export const AddWholesealerModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
       <div className="bg-white p-6 rounded-lg w-3/4 md:w-1/2  relative">
-        <h2 className="text-xl font-semibold mb-4">Add Add Wholesealer</h2>
+        <h2 className="text-xl font-semibold mb-4">Add Add Wholesaler</h2>
         <hr />
         <div className=" flex flex-col md:flex-row gap-6 mt-2">
           <div className="w-full md:w-3/5">
-            <form className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Name *</label>
-                <input
-                  type="text"
-                  placeholder="Enter Company name"
-                  className="w-full border p-2 rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Store Name *
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter Store name"
-                  className="w-full border p-2 rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Company Email *
-                </label>
-                <input
-                  type="email"
-                  placeholder="Enter email"
-                  className="w-full border p-2 rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Phone Number *
-                </label>
-                <PhoneInput
-                  country={"us"}
-                  value={phone}
-                  onChange={(phone) => setPhone(phone)}
-                  inputClass="w-full !w-full border p-2 rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Company Address
-                </label>
-                <textarea
-                  placeholder="Enter Address"
-                  className="w-full border p-2 rounded"
-                  rows="4"
-                ></textarea>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Password *
-                </label>
-                <input
-                  type="password"
-                  placeholder="Enter Password"
-                  className="w-full border p-2 rounded"
-                />
-              </div>
-            </form>
+           
           </div>
 
           <div className="w-full md:w-1/3 flex flex-col ">
