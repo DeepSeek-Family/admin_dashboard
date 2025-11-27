@@ -57,9 +57,7 @@ export default function RecusalDetailModal({
                 ))}
             </ul>
           ) : (
-            <p className="text-gray-500 italic">
-              No conflicts reported
-            </p>
+            <p className="text-gray-500 italic">No conflicts reported</p>
           )}
         </div>
 

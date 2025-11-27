@@ -6,9 +6,33 @@ export default function AppealCustomPdfModal({
   onCancel,
   selectedRecord,
 }) {
+  // Normalize appeal grounds: supports JSON string or array
+  const appealGroundsList = (() => {
+    const raw = selectedRecord?.appealGrounds;
+    if (!raw) return [];
+    try {
+      if (Array.isArray(raw)) return raw.filter(Boolean);
+      if (typeof raw === "string") {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.filter(Boolean);
+        return [raw].filter(Boolean);
+      }
+      return [];
+    } catch {
+      // Fallback: try to split comma-separated strings
+      if (typeof raw === "string") {
+        return raw
+          .replace(/^\[|\]$/g, "")
+          .split(/\s*,\s*/)
+          .map((s) => s.replace(/^"|"$/g, ""))
+          .filter(Boolean);
+      }
+      return [];
+    }
+  })();
   return (
     <Modal
-      visible={!!visible}
+      open={!!visible}
       onCancel={onCancel}
       footer={
         <div className="flex justify-end gap-2">
@@ -281,7 +305,7 @@ export default function AppealCustomPdfModal({
       <div id="custom-pdf-content">
         {/* Case ID */}
         <h1 className="text-center font-bold text-lg border-b-2 pb-2 mt-4 mb-4 border-black">
-          {selectedRecord?.submission?.caseId || "N/A"}
+          {selectedRecord?.submittionId?.caseId || "N/A"}
         </h1>
         <div className="flex justify-between border-b-2 pb-1 mb-2 border-black">
           {/* Initiator Details */}
@@ -325,18 +349,18 @@ export default function AppealCustomPdfModal({
               <p className="text-[16px]">
                 <strong>Name:</strong>{" "}
                 {[
-                  selectedRecord?.submission?.respondentFastName,
-                  selectedRecord?.submission?.respondentMiddleName,
-                  selectedRecord?.submission?.respondentLastName,
+                  selectedRecord?.submittionId?.respondentFastName,
+                  selectedRecord?.submittionId?.respondentMiddleName,
+                  selectedRecord?.submittionId?.respondentLastName,
                 ]
                   .filter(Boolean)
                   .join(" ") || "N/A"}
               </p>
               <p className="text-[16px]">
                 <strong>DOB:</strong>{" "}
-                {selectedRecord?.submission?.respondentDOB
+                {selectedRecord?.submittionId?.dob
                   ? new Date(
-                      selectedRecord.submission.respondentDOB
+                      selectedRecord.submittionId.dob
                     ).toLocaleDateString("en-US", {
                       month: "2-digit",
                       day: "2-digit",
@@ -361,34 +385,12 @@ export default function AppealCustomPdfModal({
         </h1>
 
         <p className="text-center font-bold text-xl mb-2">
-          INITIAL SUBMISSION FORM
+          APPEAL SUBMISSION FORM
         </p>
-        {/* Allegation Summary */}
-        <div className="mb-4">
-          <h3 className="text-center font-bold text-lg mb-2">
-            ALLEGATION SUMMARY
-          </h3>
-          <ol className="list-decimal pl-6">
-            {selectedRecord?.submission?.allegation &&
-            selectedRecord?.submission?.allegation.length > 0 ? (
-              selectedRecord?.submission?.allegation.map((item, index) => (
-                <li key={index} className="mb-1">
-                  {item}
-                </li>
-              ))
-            ) : (
-              <>
-                <li className="mb-1">N/A</li>
-              </>
-            )}
-          </ol>
-        </div>
 
         {/* Jury Panel Decisions: */}
         <div className="mb-4">
-          <h3 className="text-center font-bold text-lg mb-2">
-            JURY PANEL DECISIONS
-          </h3>
+          <h3 className="font-bold text-md mb-2">CASE OUTCOME APPEALED:</h3>
           {selectedRecord?.submission?.jurorDecisions &&
           selectedRecord?.submission?.jurorDecisions.length > 0 ? (
             <ul className="">
@@ -427,8 +429,40 @@ export default function AppealCustomPdfModal({
           )}
         </div>
 
-        {/* Admin Decision */}
+        {/* Allegation Summary */}
         <div className="mb-4">
+          <h3 className="font-bold text-md mb-2">APPEAL GROUNDS:</h3>
+          <ol className="list-decimal pl-6">
+            {appealGroundsList && appealGroundsList.length > 0 ? (
+              appealGroundsList.map((item, index) => (
+                <li key={index} className="mb-1">
+                  {String(item)}
+                </li>
+              ))
+            ) : (
+              <li className="mb-1">N/A</li>
+            )}
+          </ol>
+          <p>
+            <span className="font-bold">Other:</span>{" "}
+            <span>{selectedRecord?.declarationAndSubmission || "N/A"}</span>
+          </p>
+        </div>
+
+        {/* justification */}
+        <div className="mb-4">
+          <h3 className="font-bold text-md mb-1">JUSTIFICATION:</h3>
+          <p className="">{selectedRecord?.justification || "N/A"}</p>
+        </div>
+
+        {/* REVIEW OPTION SELECTED: */}
+        <div className="mb-4">
+          <h3 className="font-bold text-md mb-2">REVIEW OPTION SELECTED:</h3>
+          <p className="pl-3">1. {selectedRecord?.reviewOption || "N/A"}</p>
+        </div>
+
+        {/* Admin Decision */}
+        {/* <div className="mb-4">
           <h3 className="text-center font-bold text-lg mb-2">ADMIN DECISION</h3>
           {selectedRecord?.submission?.adminDecisions &&
           selectedRecord?.submission?.adminDecisions.length > 0 ? (
@@ -444,7 +478,7 @@ export default function AppealCustomPdfModal({
           ) : (
             <p className="text-center text-gray-500">No admin decision yet</p>
           )}
-        </div>
+        </div> */}
 
         {/* PERJURY DECLARATION */}
         <div className="mb-4">
@@ -462,24 +496,25 @@ export default function AppealCustomPdfModal({
                 .filter(Boolean)
                 .join(" ") || "N/A"}
             </span>
-            , the Initiator in this submission and associated case, hereby
-            declare and affirm in accordance with the laws of the
-            jurisdiction(s) involved,{" "}
-            <span className="font-semibold">UNDER PENALTY OF PERJURY</span>,
-            that the foregoing is true and accurate and a I have good-faith
-            basis to the allegations to the best of my knowledge.
+            , in this case, declare and affirm in accordance with the laws of
+            the jurisdiction's involved,{" "}
+            <span className="font-bold">UNDER PENALTY OF PERJURY</span>, that
+            the information in this Appeal Request Form is true and accurate to
+            the best of my knowledge. I understand that knowingly submitting
+            false information may result in permanent suspension of platform
+            access and legal consequences.
           </p>
         </div>
 
-        {/* EVIDENCE ATTACHMENTS */}
+        {/* SUPPORTING DOCUMENTS */}
         <div className="mb-4 mt-4">
           <h3 className="text-center font-bold text-lg mb-2">
-            EVIDENCE ATTACHMENTS
+            SUPPORTING DOCUMENTS
           </h3>
           <ol className="list-decimal pl-6">
-            {selectedRecord?.submission?.evidence &&
-              selectedRecord?.submission?.evidence.length > 0 &&
-              selectedRecord?.submission?.evidence.map((file, index) => (
+            {selectedRecord?.supportingDocument &&
+              selectedRecord?.supportingDocument.length > 0 &&
+              selectedRecord?.supportingDocument.map((file, index) => (
                 <li key={index} className="mb-1">
                   <a
                     href={getImageUrl(file)}
