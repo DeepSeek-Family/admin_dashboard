@@ -38,10 +38,8 @@ const AppealSubmission = () => {
     // Map display status to API status format
     const statusMap = {
       Pending: "PENDING",
-      "Under Jury Review": "APPROVED",
-      "Final Review": "FINAL_REVIEW",
+      Approved: "APPROVED",
       Rejected: "REJECTED",
-      Completed: "COMPLETED",
     };
     const apiStatus =
       statusMap[submissionType] ||
@@ -69,7 +67,14 @@ const AppealSubmission = () => {
           (item.user?.middleName ? item.user.middleName + " " : "") +
           (item.user?.lastName || "") || "N/A";
       const email = item.user?.email || "N/A";
-      const reviewOption = item.reviewOption || "N/A";
+      const reviewOption =
+        item.reviewOption === "NewJurorPanel"
+          ? "New Juror Panel"
+          : item.reviewOption === "PlatformAppealsBoard"
+          ? "Platform Appeals Board"
+          : item.reviewOption === "ModeratorOnlyReview"
+          ? "Moderator Only Review"
+          : item.reviewOption || "N/A";
       const jurorVote = (item.jurorDecisions?.length || 0) + " of 3";
       const humanStatus = (item.status || "")
         .toLowerCase()
@@ -295,10 +300,8 @@ const AppealSubmission = () => {
           >
             <Option value="All">All Status</Option>
             <Option value="Pending">Pending</Option>
-            <Option value="Under Jury Review">Under Jury Review</Option>
-            <Option value="Final Review">Final Review</Option>
+            <Option value="Approved">Approved</Option>
             <Option value="Rejected">Rejected</Option>
-            <Option value="Completed">Completed</Option>
           </Select>
         </div>
       </div>

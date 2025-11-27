@@ -1,6 +1,7 @@
 import { Select } from "antd";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import Cookies from "js-cookie";
 import AppealSubmission from "./appeal/AppealSubmission";
 import InitialSubmission from "./initial/InitialSubmission";
 import MisuseSubmission from "./misuse/MisuseSubmission";
@@ -13,6 +14,21 @@ import RecusalSubmission from "./recusal/RecusalSubmission";
 export default function SubmmissionManagement() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selected, setSelected] = useState("initial");
+  const [userRole, setUserRole] = useState(null);
+
+  // Get user role from token in localStorage
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        // Decode JWT token (simple base64 decode of payload)
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setUserRole(payload?.role || null);
+      }
+    } catch (error) {
+      console.error("Error parsing token:", error);
+    }
+  }, []);
 
   // Initialize selection from the URL on first render and keep in sync on back/forward
   useEffect(() => {
@@ -53,7 +69,10 @@ export default function SubmmissionManagement() {
               { label: "Initial Submission", value: "initial" },
               { label: "Respondent Submission", value: "respondent" },
               { label: "Appeal Submission", value: "appeal" },
-              { label: "Misuse Submission", value: "misuse" },
+              // Hide misuse for MODERATOR
+              ...(userRole === "MODERATOR"
+                ? []
+                : [{ label: "Misuse Submission", value: "misuse" }]),
               {
                 label: "Technical Support Submission",
                 value: "technical_support",
@@ -63,10 +82,15 @@ export default function SubmmissionManagement() {
                 label: "Identity Dispute Submission",
                 value: "identity_dispute",
               },
-              {
-                label: "Recusal & Conflict Submission",
-                value: "recusal_conflict",
-              },
+              // Hide recusal_conflict for MODERATOR
+              ...(userRole === "MODERATOR"
+                ? []
+                : [
+                    {
+                      label: "Recusal & Conflict Submission",
+                      value: "recusal_conflict",
+                    },
+                  ]),
               { label: "Seal or Expunge Submission", value: "seal_or_expunge" },
             ]}
           />

@@ -23,7 +23,12 @@ export default function IdentityDisputeDetailModal({
             <div>
               <p className="text-gray-600">Name:</p>
               <p className="font-semibold">
-                {selectedRecord?.user?.name || "N/A"}
+                {selectedRecord?.user?.firstName +
+                  " " +
+                  (selectedRecord?.user?.middleName
+                    ? selectedRecord.user.middleName + " "
+                    : "") +
+                  (selectedRecord?.user?.lastName || "") || "N/A"}
               </p>
             </div>
             <div>
