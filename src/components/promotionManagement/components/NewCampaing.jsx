@@ -69,7 +69,7 @@ const NewCampaign = ({ onSave, onCancel }) => {
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-4">Add New Promotion</h2>
+      <h2 className="text-lg font-bold mb-4">Add New Campaign</h2>
       <Form layout="vertical" form={form} onFinish={handleSubmit}>
         <div className="flex flex-row justify-between gap-4">
           <div className="w-full">
@@ -156,7 +156,7 @@ const NewCampaign = ({ onSave, onCancel }) => {
           </div>
         </div>
 
-        {/* <div className="w-full mb-4">
+        <div className="w-full mb-4">
           <Form.Item
             label="Select Promotion Days"
             name="promotionDays"
@@ -166,7 +166,7 @@ const NewCampaign = ({ onSave, onCancel }) => {
           >
             <Checkbox.Group options={daysOptions} className="flex gap-2" />
           </Form.Item>
-        </div> */}
+        </div>
 
         <Form.Item name="image" label="Upload Image (JPG/PNG only)">
           <Upload

@@ -1,15 +1,36 @@
-import { Button, ConfigProvider, Form, Input } from "antd";
-import React from "react";
+import { Form, Input, message } from "antd";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import keyIcon from "../../assets/key.png";
-import { ArrowLeft } from "lucide-react";
+import { useResetPasswordMutation } from "../../redux/apiSlices/authSlice";
 
 const SetPassword = () => {
   const email = new URLSearchParams(location.search).get("email");
   const navigate = useNavigate();
 
+  const [resetPassword, { isLoading: isResetting }] =
+    useResetPasswordMutation();
+
   const onFinish = async (values) => {
-    navigate(`/auth/login`);
+    const verifyToken = localStorage.getItem("verifyToken");
+    const payload = {
+      newPassword: values.newPassword,
+      confirmPassword: values.confirmPassword,
+    };
+
+    try {
+      const res = await resetPassword({
+        body: payload,
+        headers: { Authorization: `${verifyToken}` },
+      }).unwrap();
+      message.success(res?.message || "Password reset successful");
+      localStorage.removeItem("verifyToken");
+      navigate(`/auth/login`);
+    } catch (err) {
+      const errMsg =
+        err?.data?.message || err?.message || "Failed to reset password";
+      message.error(errMsg);
+    }
   };
 
   return (
@@ -49,10 +70,10 @@ const SetPassword = () => {
             type="password"
             placeholder="Enter New password"
             style={{
-              border: "1px solid #2C2A5B",
-              height: 45,
+              border: "1px solid #E0E4EC",
+              height: "52px",
               background: "white",
-              borderRadius: "8px",
+              borderRadius: "200px",
               outline: "none",
             }}
             className="mb-6"
@@ -97,10 +118,10 @@ const SetPassword = () => {
             type="password"
             placeholder="Enter Confirm password"
             style={{
-              border: "1px solid #2C2A5B",
-              height: 45,
+              border: "1px solid #E0E4EC",
+              height: "52px",
               background: "white",
-              borderRadius: "8px",
+              borderRadius: "200px",
               outline: "none",
             }}
             className="mb-6"
@@ -114,12 +135,13 @@ const SetPassword = () => {
             style={{
               width: "100%",
               height: 45,
+              color: "white",
               fontWeight: "400px",
               fontSize: "18px",
-              borderRadius: "8px",
+              borderRadius: "200px",
               marginTop: 20,
             }}
-            className="flex items-center justify-center border border-primary bg-primary rounded-lg hover:bg-white text-white hover:text-primary transition"
+            className="flex items-center justify-center bg-primary rounded-lg"
           >
             Submit
           </button>

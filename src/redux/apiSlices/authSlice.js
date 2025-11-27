@@ -2,17 +2,15 @@ import { api } from "../api/baseApi";
 
 const authSlice = api.injectEndpoints({
   endpoints: (builder) => ({
-    //TODO: OTP verify
     otpVerify: builder.mutation({
       query: (data) => {
         return {
           method: "POST",
-          url: "/auth/otp-verify",
+          url: "/auth/verify-email",
           body: data,
         };
       },
     }),
-    //TODO: login
     login: builder.mutation({
       query: (data) => {
         return {
@@ -21,8 +19,14 @@ const authSlice = api.injectEndpoints({
           body: data,
         };
       },
+      transformResponse: (data) => {
+        return data;
+      },
+      transformErrorResponse: ({ data }) => {
+        const { message } = data;
+        return message;
+      },
     }),
-    // TODO: forgot password
     forgotPassword: builder.mutation({
       query: (data) => {
         return {
@@ -32,53 +36,53 @@ const authSlice = api.injectEndpoints({
         };
       },
     }),
-    // TODO: reset password
     resetPassword: builder.mutation({
+      // Accept either `value` (body) or an object { body, headers }
       query: (value) => {
+        const body = value && value.body !== undefined ? value.body : value;
+        const headers = value && value.headers ? value.headers : undefined;
         return {
           method: "POST",
           url: "/auth/reset-password",
-          body: value,
+          body,
+          headers,
         };
       },
     }),
-    // TODO: change password
     changePassword: builder.mutation({
       query: (data) => {
         return {
           method: "POST",
           url: "/auth/change-password",
           body: data,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
         };
       },
     }),
-    // TODO: update profile
+
     updateProfile: builder.mutation({
       query: (data) => {
         return {
-          method: "POST",
-          url: "/auth/update-profile",
+          method: "PATCH",
+          url: "/user",
           body: data,
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
         };
       },
+      invalidatesTags: ["Profile"],
     }),
-    // TODO: get profile
+
     profile: builder.query({
       query: () => {
         return {
           method: "GET",
           url: "/user/profile",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
         };
       },
+      // backend returns { success, message, data: { ...user } }
+      transformResponse: (response) => {
+        // prefer response.data if present, otherwise fall back to response.user
+        return response?.data ?? response?.user ?? response;
+      },
+      providesTags: ["Profile"],
     }),
   }),
 });

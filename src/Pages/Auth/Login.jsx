@@ -1,89 +1,68 @@
 import { Form, Input } from "antd";
-
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import image4 from "../../assets/image4.png";
+import FormItem from "../../components/common/FormItem";
 import { useLoginMutation } from "../../redux/apiSlices/authSlice";
-import toast from "react-hot-toast";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [login, { isLoading, error }] = useLoginMutation();
+
+  const [login, { isLoading, isSuccess, error, data }] = useLoginMutation();
 
   const onFinish = async (values) => {
     try {
-      const res = await login(values).unwrap();
-      console.log("Login response:", res);
-      if (res.success || res.data.accessToken) {
-        toast.success(res.message || "Login successful");
-        localStorage.setItem("accessToken", res.data.accessToken);
-        console.log("navigate to home");
-        navigate("/dashboard");
-      } else {
-        toast.error(res.message || "Login failed");
-        return;
+      // Call the login mutation with email and password
+      const response = await login({
+        email: values.email,
+        password: values.password,
+      }).unwrap();
+
+      if (response.success) {
+        const token = response.data.accessToken;
+        const refreshToken = response.data.refreshToken;
+
+        localStorage.setItem("token", token);
+        if (refreshToken) {
+          localStorage.setItem("refreshToken", refreshToken);
+        }
+
+        // Dispatch custom event to notify UserProvider of token change
+        // Use setTimeout to ensure localStorage is updated first
+        setTimeout(() => {
+          window.dispatchEvent(new Event("tokenChange"));
+        }, 0);
+
+        if (response.data.accessToken) {
+          navigate("/");
+        }
       }
-    } catch (error) {
-      toast.error(error?.data?.message || "Login failed");
-      return;
+    } catch (err) {
+      console.error("Login failed:", err);
+      toast.error(err);
+      // Error handling could be improved with user feedback
     }
   };
 
   return (
     <div>
       <div className="text-center mb-8">
-        <img src={image4} alt="logo" className="px-16 mx-auto" />
-        {/* <h1 className="text-[25px] font-semibold mb-[10px] mt-[20px]">
-          Merchants Dashboard
-        </h1> */}
-        <p className="mt-6">Welcome back! Please enter your details.</p>
+        <img src={image4} alt="logo" className="h-40 w-40 mx-auto" />
+        <h1 className="text-[25px] font-semibold mb-[10px] mt-[20px]">
+          Admin Dashboard
+        </h1>
+        <p>Welcome back! Please enter your details.</p>
       </div>
       <Form onFinish={onFinish} layout="vertical">
-        <Form.Item
-          name="email"
-          label={
-            <p
-              style={{
-                display: "block",
-                color: "#5C5C5C",
-              }}
-              htmlFor="email"
-              className="font-semibold "
-            >
-              Email
-            </p>
-          }
-          rules={[
-            { required: true, message: "Please input your Email!" },
-            { type: "email", message: "Please enter a valid email!" },
-          ]}
-          className="custom-form-item"
-        >
-          <Input
-            placeholder="Enter your password"
-            style={{
-              height: 50,
-              border: "1px solid #2C2A5B",
-              outline: "none",
-              boxShadow: "none",
-              borderRadius: "8px",
-            }}
-          />
-        </Form.Item>
+        <FormItem
+          name={"email"}
+          label={"Email"}
+          inputStyle={{ border: "1px solid #b91c1c" }}
+        />
 
         <Form.Item
           name="password"
-          label={
-            <p
-              style={{
-                display: "block",
-                color: "#5C5C5C",
-              }}
-              htmlFor="email"
-              className="font-semibold "
-            >
-              Password
-            </p>
-          }
+          label={<p>Password</p>}
           rules={[
             {
               required: true,
@@ -95,22 +74,14 @@ const Login = () => {
             type="password"
             placeholder="Enter your password"
             style={{
-              height: 50,
-              border: "1px solid #2C2A5B",
+              height: 40,
+              border: "1px solid #B91C1C",
               outline: "none",
               boxShadow: "none",
-              borderRadius: "8px",
+              borderRadius: "200px",
             }}
           />
         </Form.Item>
-
-        {error && (
-          <p
-            style={{ color: "red", marginBottom: "10px", textAlign: "center" }}
-          >
-            {error}
-          </p>
-        )}
 
         <div className="flex items-center justify-between">
           <Form.Item
@@ -122,7 +93,7 @@ const Login = () => {
           </Form.Item>
 
           <a
-            className="login-form-forgot text-[#1E1E1E] hover:text-primary rounded-md font-semibold"
+            className="login-form-forgot text-[#1E1E1E] hover:text-[#B91C1C] rounded-md font-semibold"
             href="/auth/forgot-password"
           >
             Forgot password
@@ -135,18 +106,50 @@ const Login = () => {
             type="submit"
             style={{
               width: "100%",
-              height: 50,
+              height: 45,
+              color: "white",
               fontWeight: "400px",
               fontSize: "18px",
               marginTop: 20,
-              borderRadius: "8px",
+              borderRadius: "200px",
             }}
-            className="flex items-center justify-center border border-primary bg-primary hover:bg-white text-white hover:text-primary transition"
+            className="flex items-center justify-center bg-[#B91C1C] rounded-lg"
           >
-            {isLoading ? "Signing in..." : "Sign in"}
+            Sign in
           </button>
         </Form.Item>
       </Form>
+      {/* <Form.Item style={{ marginBottom: 0 }}>
+          <button
+            htmlType="submit"
+            type="submit"
+            style={{
+              width: "100%",
+              height: 45,
+              color: "#1E1E1E",
+              fontWeight: "400px",
+              fontSize: "18px",
+              marginTop: 20,
+              borderRadius: "200px",
+              border: "1px solid #B91C1C",
+            }}
+            className="flex items-center justify-center rounded-lg"
+          >
+            <img src={googleIcon} alt="Google logo" className="mr-[12px]" />
+            Sign in with Google
+          </button>
+        </Form.Item> */}
+      {/* <div className="mt-[20px]">
+        <p className="text-center text-[#1E1E1E]">
+          Don't have an account?{" "}
+          <a
+            href="/auth/signup"
+            className="text-[#B91C1C] hover:text-[#1E1E1E] font-semibold"
+          >
+            Sign Up
+          </a>
+        </p>
+      </div> */}
     </div>
   );
 };

@@ -1,203 +1,248 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import Auth from "../Layout/Auth/Auth";
 import Main from "../Layout/Main/Main";
-import NotFound from "../NotFound";
+import Home from "../Pages/Dashboard/Home";
+import Users from "../Pages/Dashboard/Subsciber";
+import Admin from "../Pages/Dashboard/Admin";
+import Category from "../Pages/Dashboard/PushNotification";
+import Events from "../Pages/Dashboard/UpdatePassword";
+import AboutUs from "../Pages/Dashboard/AboutUs";
+import PrivacyPolicy from "../Pages/Dashboard/PrivacyPolicy";
+import TermsAndConditions from "../Pages/Dashboard/TermsAndCondition";
 import ChangePassword from "../Pages/Auth/ChangePassword";
 import Login from "../Pages/Auth/Login";
 import ForgotPassword from "../Pages/Auth/ForgotPassword";
-import VerifyOtp from "../Pages/Auth/VerifyOtp";
+import ResetPassword from "../Pages/Auth/SetPassword";
+import NotFound from "../NotFound";
+import Notifications from "../Pages/Dashboard/Notifications";
+import SubCategory from "../Pages/Dashboard/SubCategory";
+import AdminProfile from "../Pages/Dashboard/AdminProfile/AdminProfile";
+import RetailerTable from "../Pages/Dashboard/Retailer";
+import WholesealerTable from "../Pages/Dashboard/Wholesealer";
+import SalesManagement from "../Pages/Dashboard/SalesManagement";
+import Retailer from "../Pages/Dashboard/Retailer";
+import SaleRepsManagement from "../Pages/Dashboard/SaleRepsManagement";
+import ViewSalesReps from "../components/SalesRepsManagement/detailsSalesReps/ViewSalesReps";
+import LoyaltyProgram from "../Pages/Dashboard/LoyaltyProgram";
+import SubscriptionTable from "../components/subscriber/SubscriberTable";
+import OrderManagementContainer from "../components/orderMangement/OrderManagementContainer";
+import CategoryManagement from "../components/category/CategoryManagement";
+import UserManagement from "../components/userMangement/UserManagement";
+import ProductManagement from "../components/productManagement/ProductsManagement";
+import FAQSection from "../components/faq/Faq";
+import SubscriptionPackagePage from "../Pages/Dashboard/Subscription";
+import PackagesPlans from "../Pages/Dashboard/Subscription";
+import SubCategoryManagement from "../Pages/Dashboard/SubCategory";
+import Contact from "../Pages/Dashboard/Contact";
+import ColorManagement from "../components/colorManage/ColorManagement";
+import SizeManagement from "../components/sizeManagement/SizeManagement";
 import ResetSuccess from "../Pages/Auth/ResetSuccess";
 import SetPassword from "../Pages/Auth/SetPassword";
-
-// Dashboard pages & components
 import CustomerManagement from "../components/customerManagement/customerManagement";
 import TierSystem from "../components/TierSystem/TierSystem";
-import SubscriptionTable from "../components/subscriber/SubscriberTable";
 import PromotionManagement from "../components/promotionManagement/PromotionManagement";
 import SalesRepPortal from "../components/salesRepPortal/SalesRepPortal";
 import AuditLogs from "../components/auditLogs/AuditLogs";
 import LoginCredentials from "../components/loginCredentials/LoginCredentials";
 import ReportingAnalytics from "../components/reportingAnalytics/ReportingAnalytics";
 import PushNotifications from "../components/pushNotifications/PushNotifications";
-import OrderManagementContainer from "../components/orderMangement/OrderManagementContainer";
-import SalesManagement from "../Pages/Dashboard/SalesManagement";
-import Retailer from "../Pages/Dashboard/Retailer";
-import ViewSalesReps from "../components/SalesRepsManagement/detailsSalesReps/ViewSalesReps";
-import LoyaltyProgram from "../Pages/Dashboard/LoyaltyProgram";
-import CategoryManagement from "../components/category/CategoryManagement";
-import ColorManagement from "../components/colorManage/ColorManagement";
-import SizeManagement from "../components/sizeManagement/SizeManagement";
-import ProductManagement from "../components/productManagement/ProductsManagement";
-import UserManagement from "../components/userMangement/UserManagement";
-import PackagesPlans from "../Pages/Dashboard/Subscription";
-import Banner from "../Pages/Dashboard/Banner";
-import AboutUs from "../Pages/Dashboard/AboutUs";
-import Contact from "../Pages/Dashboard/Contact";
-import PrivacyPolicy from "../Pages/Dashboard/PrivacyPolicy";
-import TermsAndConditions from "../Pages/Dashboard/TermsAndCondition";
-import FAQSection from "../components/faq/Faq";
-import AdminProfile from "../Pages/Dashboard/AdminProfile/AdminProfile";
-import Notifications from "../Pages/Dashboard/Notifications";
-
-// Sales reps
-import SaleRepsManagement from "../Pages/Dashboard/SaleRepsManagement";
-
-import PrivateRoute from "./ProtectedRoute";
-import SubmissionManagement from "../components/submissionManagement/SubmissionManagement";
-import UploadDocument from "../components/uploadDocuments/UploadDocument";
 import SignUp from "../Pages/Auth/SignUp";
-import Home from "../Pages/Dashboard/Home";
-
-// 🔑 Simple auth check function (adjust based on your app logic)
-const isLoggedIn = () => {
-  return !!localStorage.getItem("token"); // change "token" to your auth key
-};
+import OtpVerification from "../Pages/Auth/OtpVerification";
+import ShopInfo from "../Pages/Auth/ShopInfo";
+import TotalEarnings from "../components/TotalEarnings/TotalEarnings";
+import SubmissionManagementCom from "../components/subscriptionManagement/SubmissionManagement";
+import PrivateRoute from "./ProtectedRoute";
+// import SalesRepsManagementTable from "../components/SalesRepsManagement/SalesRepsManagement";
 
 const router = createBrowserRouter([
-  // ✅ Root redirect
-  {
-    path: "/",
-    element: isLoggedIn() ? (
-      <Navigate to="/dashboard" replace />
-    ) : (
-      <Navigate to="/dashboard" replace />
-    ),
-  },
-
-  // ====== DASHBOARD (Protected) ======
   {
     path: "/",
     element: (
-      <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
+      <PrivateRoute>
         <Main />
       </PrivateRoute>
     ),
+    // element: <Main />,
+    // element: <Auth />,
+
     children: [
       {
-        path: "/dashboard",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <Home />
-            //{" "}
-          </PrivateRoute>
-        ),
+        path: "/",
+        element: <Home />,
       },
       {
-        path: "/user-management",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <LoginCredentials />
-          </PrivateRoute>
-        ),
+        path: "/sellManagement",
+        element: <SaleRepsManagement />,
       },
       {
-        path: "/subscription-management",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <PackagesPlans />
-          </PrivateRoute>
-        ),
+        path: "/customerManagement",
+        element: <CustomerManagement />,
       },
       {
-        path: "/reports-analytics",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <ReportingAnalytics />
-          </PrivateRoute>
-        ),
+        path: "/loyaltyProgram",
+        element: <TierSystem />,
       },
       {
-        path: "/upload-documents",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <UploadDocument />
-          </PrivateRoute>
-        ),
+        path: "/promotionManagement",
+        element: <PromotionManagement />,
       },
       {
-        path: "/category-management",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <CategoryManagement />
-          </PrivateRoute>
-        ),
+        path: "/submissionManagement",
+        element: <SubmissionManagementCom />,
+      },
+      {
+        path: "/totalEarnings",
+        element: <TotalEarnings />,
+      },
+
+      {
+        path: "/salesRepPortal",
+        element: <SalesRepPortal />,
+      },
+      {
+        path: "/auditLogs",
+        element: <AuditLogs />,
+      },
+      {
+        path: "/userManagement",
+        element: <UserManagement />,
+      },
+      {
+        path: "/reportingAnalytics",
+        element: <ReportingAnalytics />,
+      },
+      {
+        path: "/pushNotification",
+        element: <PushNotifications />,
+      },
+
+      // Burger King end
+      {
+        path: "/orderManagement",
+        element: <OrderManagementContainer />,
+      },
+
+      {
+        path: "/salesManagement",
+        element: <SalesManagement />,
+      },
+      {
+        path: "/retailer",
+        element: <Retailer />,
+      },
+
+      {
+        path: "/merchantManagement/:id",
+        element: <ViewSalesReps />,
+      },
+      {
+        path: "/loyaltyProgram",
+        element: <LoyaltyProgram />,
+      },
+      {
+        path: "/category",
+        element: <CategoryManagement />,
+      },
+      {
+        path: "/color",
+        element: <ColorManagement />,
+      },
+      {
+        path: "/size",
+        element: <SizeManagement />,
+      },
+      {
+        path: "/products",
+        element: <ProductManagement />,
+      },
+      {
+        path: "/user",
+        element: <UserManagement />,
+      },
+      {
+        path: "/subscription",
+        element: <PackagesPlans />,
       },
       {
         path: "/about-us",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <AboutUs />
-          </PrivateRoute>
-        ),
+        element: <AboutUs />,
       },
       {
         path: "/contact",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <Contact />
-          </PrivateRoute>
-        ),
+        element: <Contact />,
       },
       {
         path: "/privacy-policy",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <PrivacyPolicy />
-          </PrivateRoute>
-        ),
+        element: <PrivacyPolicy />,
       },
       {
         path: "/terms-and-conditions",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <TermsAndConditions />
-          </PrivateRoute>
-        ),
+        element: <TermsAndConditions />,
+      },
+      {
+        path: "/change-password",
+        element: <ChangePassword />,
       },
       {
         path: "/faq",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <FAQSection />
-          </PrivateRoute>
-        ),
+        element: <FAQSection />,
       },
+      // {
+      //   path: "/sub-category",
+      //   element: <SubCategoryManagement />,
+      // },
       {
         path: "/profile",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <AdminProfile />
-          </PrivateRoute>
-        ),
+        element: <AdminProfile />,
       },
       {
         path: "/notification",
-        element: (
-          <PrivateRoute allowedRoles={["SUPER_ADMIN"]}>
-            <Notifications />
-          </PrivateRoute>
-        ),
+        element: <Notifications />,
       },
     ],
   },
-
-  // ====== AUTH ======
   {
     path: "/auth",
     element: <Auth />,
     children: [
-      { path: "/auth", element: <Login /> },
-      { path: "login", element: <Login /> },
-      { path: "forgot-password", element: <ForgotPassword /> },
-      { path: "verify-otp", element: <VerifyOtp /> },
-      { path: "reset-success", element: <ResetSuccess /> },
-      { path: "set-password", element: <SetPassword /> },
-      { path: "signup", element: <SignUp /> },
+      {
+        path: "/auth",
+        element: <Login />,
+      },
+      {
+        path: "login",
+        element: <Login />,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />,
+      },
+      {
+        path: "reset-success",
+        element: <ResetSuccess />,
+      },
+      {
+        path: "set-password",
+        element: <SetPassword />,
+      },
+      {
+        path: "signup",
+        element: <SignUp />,
+      },
+      {
+        path: "otp-verification",
+        element: <OtpVerification />,
+      },
+      {
+        path: "shop-info",
+        element: <ShopInfo />,
+      },
     ],
   },
-
-  // ====== 404 ======
-  { path: "*", element: <NotFound /> },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
 ]);
 
 export default router;

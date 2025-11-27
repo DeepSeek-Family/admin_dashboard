@@ -1,30 +1,28 @@
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, message } from "antd";
 import { useChangePasswordMutation } from "../../../redux/apiSlices/authSlice";
-import toast from "react-hot-toast";
 
 const ChangePassword = () => {
   const [form] = Form.useForm();
-  // change password api call
-  const [changePassword, { isLoading }] = useChangePasswordMutation();
+
+  const [changePassword, { isLoading: isChanging }] =
+    useChangePasswordMutation();
 
   const handleChangePassword = async (values) => {
-    try {
-      const result = await changePassword({
-        currentPassword: values.current_password,
-        newPassword: values.new_password,
-        confirmPassword: values.confirm_password,
-      }).unwrap();
+    // Map form fields (snake_case) to backend expected camelCase keys
+    const payload = {
+      currentPassword: values.current_password,
+      newPassword: values.new_password,
+      confirmPassword: values.confirm_password,
+    };
 
-      if (result.success) {
-        toast.success("Password changed successfully!");
-        form.resetFields();
-      } else {
-        toast.error("Failed to change password. Please try again.");
-      }
-    } catch (error) {
-      toast.error(
-        error?.data?.message || "An error occurred. Please try again."
-      );
+    try {
+      await changePassword(payload).unwrap();
+      message.success("Password updated successfully");
+      form.resetFields();
+    } catch (err) {
+      const errMsg =
+        err?.data?.message || err?.message || "Failed to change password";
+      message.error(errMsg);
     }
   };
 
@@ -64,7 +62,7 @@ const ChangePassword = () => {
                   type="password"
                   style={{
                     // border: "1px solid #E0E4EC",
-                    height: "40px",
+                    height: "45px",
                     background: "white",
                     borderRadius: "8px",
                     outline: "none",
@@ -82,17 +80,19 @@ const ChangePassword = () => {
                 rules={[
                   {
                     required: true,
-                    message: "Please confirm your password!",
+                    message: "Please enter your new password!",
                   },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
-                      if (
-                        !value ||
-                        getFieldValue("current_password") === value
-                      ) {
+                      if (!value) {
+                        return Promise.reject(
+                          new Error("Please enter your new password!")
+                        );
+                      }
+                      if (getFieldValue("current_password") === value) {
                         return Promise.reject(
                           new Error(
-                            "The new password and current password do not match!"
+                            "New password must be different from current password"
                           )
                         );
                       }
@@ -107,7 +107,7 @@ const ChangePassword = () => {
                   placeholder="Enter password"
                   style={{
                     // border: "1px solid #E0E4EC",
-                    height: "40px",
+                    height: "45px",
                     background: "white",
                     borderRadius: "8px",
                     outline: "none",
@@ -119,7 +119,7 @@ const ChangePassword = () => {
             <div className="mb-[40px] w-[100%]">
               <Form.Item
                 name="confirm_password"
-                label={<p style={{ display: "block" }}>Re-Type Password</p>}
+                label={<p style={{ display: "block" }}>Confirm Password</p>}
                 style={{ marginBottom: 0 }}
                 dependencies={["new_password"]}
                 hasFeedback
@@ -147,7 +147,7 @@ const ChangePassword = () => {
                   placeholder="Enter password"
                   style={{
                     // border: "1px solid #E0E4EC",
-                    height: "40px",
+                    height: "45px",
                     background: "white",
                     borderRadius: "8px",
                     outline: "none",
@@ -158,20 +158,22 @@ const ChangePassword = () => {
 
             {/* Center the Button using Flexbox */}
             <div
-              className="flex justify-center mb-[20px]"
+              className="flex justify-center mb-4"
               style={{
                 width: "100%",
               }}
             >
-              <Button
-                type="primary"
-                htmlType="submit"
-                block
-                loading={isLoading}
-                style={{ height: 40 }}
-              >
-                {isLoading ? "Updating..." : "Update Password"}
-              </Button>
+              <Form.Item style={{ marginBottom: 0, width: "100%" }}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={isChanging}
+                  style={{ height: 45 }}
+                >
+                  Update Password
+                </Button>
+              </Form.Item>
             </div>
           </Form>
         </div>

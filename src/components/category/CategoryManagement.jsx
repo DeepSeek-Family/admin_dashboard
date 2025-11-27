@@ -1,383 +1,380 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   Button,
   Modal,
   Form,
   Input,
-  Tooltip,
-  Switch,
-  Select,
+  Space,
+  Popconfirm,
+  Typography,
+  Breadcrumb,
+  Card,
+  Upload,
+  message,
+  Image,
 } from "antd";
-import { FaTrash } from "react-icons/fa";
-import { EditOutlined } from "@ant-design/icons";
-import Swal from "sweetalert2";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
+import SubCategoryManagement from "../../Pages/Dashboard/SubCategory";
 
-const { Option } = Select;
-
-const components = {
-  header: {
-    row: (props) => (
-      <tr
-        {...props}
-        style={{
-          backgroundColor: "#f0f5f9",
-          height: "50px",
-          color: "secondary",
-          fontSize: "18px",
-          textAlign: "center",
-          padding: "12px",
-        }}
-      />
-    ),
-    cell: (props) => (
-      <th
-        {...props}
-        style={{
-          color: "secondary",
-          fontWeight: "bold",
-          fontSize: "18px",
-          textAlign: "center",
-          padding: "12px",
-        }}
-      />
-    ),
-  },
-};
+const { Title } = Typography;
 
 const CategoryManagement = () => {
-  const [data, setData] = useState([
-    {
-      id: 1,
-      categoryName: "Soil Analysis",
-      submission: "50",
-      createdAt: "2025-08-01",
-      status: "Active",
-    },
-    {
-      id: 2,
-      categoryName: "Water Quality",
-      submission: "32",
-      createdAt: "2025-08-03",
-      status: "Inactive",
-    },
-    {
-      id: 3,
-      categoryName: "Fertilizer Testing",
-      submission: "75",
-      createdAt: "2025-08-05",
-      status: "Active",
-    },
-    {
-      id: 4,
-      categoryName: "Crop Disease",
-      submission: "20",
-      createdAt: "2025-08-07",
-      status: "Active",
-    },
-    {
-      id: 5,
-      categoryName: "Pesticide Residue",
-      submission: "44",
-      createdAt: "2025-08-09",
-      status: "Inactive",
-    },
-    {
-      id: 6,
-      categoryName: "Nutrient Deficiency",
-      submission: "61",
-      createdAt: "2025-08-11",
-      status: "Active",
-    },
-    {
-      id: 7,
-      categoryName: "Compost Quality",
-      submission: "29",
-      createdAt: "2025-08-13",
-      status: "Inactive",
-    },
-    {
-      id: 8,
-      categoryName: "Soil pH Testing",
-      submission: "58",
-      createdAt: "2025-08-15",
-      status: "Active",
-    },
-  ]);
+  // State for categories
+  const [categories, setCategories] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [form] = Form.useForm();
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showSubCategories, setShowSubCategories] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [fileList, setFileList] = useState([]);
 
-  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [viewForm] = Form.useForm();
-  const [searchText, setSearchText] = useState("");
+  // Load initial data (mock data for demonstration)
+  useEffect(() => {
+    // In a real application, this would be an API call
+    const mockCategories = [
+      {
+        id: 1,
+        name: "Electronics",
+        description: "Electronic devices",
+        imageUrl: "https://i.ibb.co.com/C5dPm7xb/Frame-2147226698.png",
+      },
+      {
+        id: 2,
+        name: "Clothing",
+        description: "Fashion items",
+        imageUrl: "https://i.ibb.co.com/d4tpsSPj/Frame-2147227088-1.png",
+      },
+      {
+        id: 3,
+        name: "Books",
+        description: "Reading materials",
+        imageUrl: "https://i.ibb.co.com/C5dPm7xb/Frame-2147226698.png",
+      },
+    ];
 
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [addForm] = Form.useForm();
+    setCategories(mockCategories);
+  }, []);
 
-  // View/Edit Modal
-  const showViewModal = (record) => {
-    setSelectedRecord(record);
-    viewForm.setFieldsValue(record);
-    setIsViewModalVisible(true);
-  };
+  // Reset image state when modal is opened/closed
+  useEffect(() => {
+    if (modalVisible) {
+      if (editingId !== null) {
+        const category = categories.find((c) => c.id === editingId);
+        if (category?.imageUrl) {
+          setImageUrl(category.imageUrl);
+          setFileList([
+            {
+              uid: "-1",
+              name: "category-image.png",
+              status: "done",
+              url: category.imageUrl,
+            },
+          ]);
+        } else {
+          setImageUrl(null);
+          setFileList([]);
+        }
+      } else {
+        setImageUrl(null);
+        setFileList([]);
+      }
+    }
+  }, [modalVisible, editingId, categories]);
 
-  const handleCloseViewModal = () => {
-    setIsViewModalVisible(false);
-    setSelectedRecord(null);
-  };
-
-  const handleUpdateRecord = () => {
-    viewForm.validateFields().then((values) => {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === selectedRecord.id ? { ...item, ...values } : item
+  // Add or update a category
+  const handleCategorySave = (values) => {
+    if (editingId !== null) {
+      setCategories(
+        categories.map((category) =>
+          category.id === editingId
+            ? {
+                ...category,
+                ...values,
+                imageUrl: imageUrl || category.imageUrl,
+              }
+            : category
         )
       );
-      Swal.fire({
-        title: "Updated!",
-        text: "Category details have been updated successfully.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      setIsViewModalVisible(false);
-    });
-  };
-
-  // Add New Category
-  const handleAddCategory = () => {
-    addForm.validateFields().then((values) => {
+      message.success("Category updated successfully");
+    } else {
+      // Add new category
       const newCategory = {
-        id: data.length + 1,
-        status: "Active",
+        id: Math.max(0, ...categories.map((c) => c.id)) + 1,
         ...values,
+        imageUrl: imageUrl,
       };
-      setData((prev) => [...prev, newCategory]);
-      Swal.fire({
-        title: "Category Added!",
-        text: `Category "${values.categoryName}" has been added successfully.`,
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      addForm.resetFields();
-      setIsAddModalVisible(false);
-    });
+      setCategories([...categories, newCategory]);
+      message.success("Category added successfully");
+    }
+    resetModal();
   };
 
-  const columns = [
-    { title: "SL", dataIndex: "id", key: "id", align: "center" },
-    {
-      title: "Category Name",
-      dataIndex: "categoryName",
-      key: "categoryName",
-      align: "center",
-    },
-    {
-      title: "Submission",
-      dataIndex: "submission",
-      key: "submission",
-      align: "center",
-    },
-    {
-      title: "Created At",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      align: "center",
-    },
-    { title: "Status", dataIndex: "status", key: "status", align: "center" },
-    {
-      title: "Action",
-      key: "action",
-      align: "center",
-      width: 120,
-      render: (_, record) => (
-        <div
-          className="flex gap-4 justify-between align-middle py-[3px] px-[15px] border border-primary rounded-md"
-          style={{ alignItems: "center" }}
-        >
-          <Tooltip title="View & Update Details">
-            <button
-              onClick={() => showViewModal(record)}
-              className="text-primary hover:text-green-700 text-xl"
-            >
-              <EditOutlined />
-            </button>
-          </Tooltip>
+  // Delete a category
+  const handleCategoryDelete = (id) => {
+    setCategories(categories.filter((category) => category.id !== id));
+    message.success("Category deleted successfully");
+  };
 
-          <Tooltip title="Delete">
-            <button
-              onClick={() => {
-                Swal.fire({
-                  title: "Are you sure?",
-                  text: "You won't be able to revert this!",
-                  icon: "warning",
-                  showCancelButton: true,
-                  confirmButtonColor: "#3085d6",
-                  cancelButtonColor: "#d33",
-                  confirmButtonText: "Yes, delete it!",
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    setData(data.filter((item) => item.id !== record.id));
-                    Swal.fire({
-                      title: "Deleted!",
-                      text: "Your record has been deleted.",
-                      icon: "success",
-                    });
-                  }
-                });
-              }}
-              className="text-red-500 hover:text-red-700 text-md"
-            >
-              <FaTrash />
-            </button>
-          </Tooltip>
+  // Open modal for adding/editing
+  const showModal = (id = null) => {
+    setEditingId(id);
 
-          <Switch
-            size="small"
-            checked={record.status === "Active"}
+    // If editing, populate the form
+    if (id !== null) {
+      const category = categories.find((c) => c.id === id);
+      form.setFieldsValue(category);
+    } else {
+      form.resetFields();
+    }
+
+    setModalVisible(true);
+  };
+
+  // Reset modal state
+  const resetModal = () => {
+    setModalVisible(false);
+    setEditingId(null);
+    form.resetFields();
+    setImageUrl(null);
+    setFileList([]);
+  };
+
+  // View subcategories for a specific category
+  const viewSubCategories = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setShowSubCategories(true);
+  };
+
+  // Go back to categories list
+  const backToCategories = () => {
+    setShowSubCategories(false);
+    setSelectedCategory(null);
+  };
+
+  // Handle image upload
+  const handleImageUpload = ({ file, fileList }) => {
+    setFileList(fileList);
+
+    if (file.status === "uploading") {
+      return;
+    }
+
+    if (file.status === "done") {
+      const uploadedImageUrl = URL.createObjectURL(file.originFileObj);
+      setImageUrl(uploadedImageUrl);
+      message.success(`${file.name} uploaded successfully`);
+    } else if (file.status === "error") {
+      message.error(`${file.name} upload failed.`);
+    }
+  };
+
+  // Configure image upload props
+  const uploadProps = {
+    name: "file",
+    listType: "picture",
+    maxCount: 1,
+    fileList: fileList,
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith("image/");
+      if (!isImage) {
+        message.error("You can only upload image files!");
+        return Upload.LIST_IGNORE;
+      }
+      return false; // Prevent auto upload
+    },
+    onChange: handleImageUpload,
+    onRemove: () => {
+      setImageUrl(null);
+      setFileList([]);
+    },
+  };
+
+  // Category columns for table
+  const categoryColumns = [
+    {
+      title: "Image",
+      dataIndex: "imageUrl",
+      key: "imageUrl",
+      align: "center",
+      render: (imageUrl) =>
+        imageUrl ? (
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Image
+              src={imageUrl}
+              alt="image"
+              style={{ width: 100, height: 40 }}
+            />
+          </div>
+        ) : (
+          <div
             style={{
-              backgroundColor: record.status === "Active" ? "#48B14C" : "gray",
+              width: 50,
+              height: 50,
+              background: "#f0f0f0",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
             }}
-            onChange={(checked) => {
-              Swal.fire({
-                title: "Are you sure?",
-                text: `You are about to change status to ${
-                  checked ? "Active" : "Inactive"
-                }.`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, change it!",
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  setData((prev) =>
-                    prev.map((item) =>
-                      item.id === record.id
-                        ? { ...item, status: checked ? "Active" : "Inactive" }
-                        : item
-                    )
-                  );
-                  Swal.fire({
-                    title: "Updated!",
-                    text: `Status has been changed to ${
-                      checked ? "Active" : "Inactive"
-                    }.`,
-                    icon: "success",
-                    timer: 1500,
-                    showConfirmButton: false,
-                  });
-                }
-              });
-            }}
-          />
-        </div>
+          >
+            No Image
+          </div>
+        ),
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      align: "center",
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      align: "center",
+      width:400
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => showModal(record.id)}
+          >
+            Edit
+          </Button>
+          <Popconfirm
+            title="Are you sure you want to delete this category?"
+            description="All subcategories will also be deleted."
+            onConfirm={() => handleCategoryDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button danger icon={<DeleteOutlined />}>
+              Delete
+            </Button>
+          </Popconfirm>
+          <Button
+            type="default"
+            icon={<EyeOutlined />}
+            onClick={() => viewSubCategories(record.id)}
+          >
+            View Subcategories
+          </Button>
+        </Space>
       ),
     },
   ];
 
+  if (showSubCategories && selectedCategory) {
+    const category = categories.find((c) => c.id === selectedCategory);
+
+    return (
+      <SubCategoryManagement
+        categoryId={selectedCategory}
+        categoryName={category ? category.name : ""}
+        onBack={backToCategories}
+        categories={categories}
+      />
+    );
+  }
+
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-4">
-        <div className="!w-[400px]">
-          <Input.Search
-            placeholder="Search"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            allowClear
-            enterButton
-            className="custom-search"
-          />
-        </div>
-        <div className="">
+    <div className="p-6">
+      <Card>
+        <div className="flex justify-between items-center mb-4">
+          <Title level={4}>Category List</Title>
           <Button
             type="primary"
-            onClick={() => setIsAddModalVisible(true)}
-            className="bg-primary !text-white hover:!text-secondary hover:!bg-white hover:!border-primary px-[50px] py-[20px] rounded-lg text-[16px] font-medium"
+            icon={<PlusOutlined />}
+            onClick={() => showModal()}
           >
-            Add New Category
+            Add Category
           </Button>
         </div>
-      </div>
-
-      <div className="overflow-x-auto">
         <Table
-          dataSource={data}
-          columns={columns}
+          columns={categoryColumns}
+          dataSource={categories.map((item) => ({ ...item, key: item.id }))}
+          rowKey="id"
           pagination={{ pageSize: 10 }}
-          bordered={false}
-          size="small"
-          rowClassName="custom-row"
-          components={components}
-          className="custom-table"
-          scroll={{ x: "max-content" }}
         />
-      </div>
+      </Card>
 
-      {/* View/Edit Modal */}
+      {/* Modal for add/edit category */}
       <Modal
-        visible={isViewModalVisible}
-        onCancel={handleCloseViewModal}
-        width={500}
-        onOk={handleUpdateRecord}
-        okText="Save Changes"
+        title={`${editingId !== null ? "Edit" : "Add"} Category`}
+        open={modalVisible}
+        onCancel={resetModal}
+        footer={null}
       >
-        {selectedRecord && (
-          <div className="flex flex-col gap-2 w-full rounded-md mb-8">
-            <p className="text-[22px] font-bold">Edit Category</p>
-            <Form
-              form={viewForm}
-              layout="vertical"
-              className="flex flex-col space-y-6 mb-6"
-            >
-              <Form.Item
-                name="categoryName"
-                label={<span className="custom-label-ant">Category Name</span>}
-                className="custom-form-item-ant"
-                rules={[
-                  { required: true, message: "Please enter category name" },
-                ]}
-              >
-                <Input
-                  placeholder="Enter category name"
-                  className="custom-input-ant-modal w-full"
-                />
-              </Form.Item>
-            </Form>
-          </div>
-        )}
-      </Modal>
-
-      {/* Add New Category Modal */}
-      <Modal
-        visible={isAddModalVisible}
-        onCancel={() => setIsAddModalVisible(false)}
-        onOk={handleAddCategory}
-        okText="Add Category"
-        width={500}
-      >
-        <div className="flex flex-col gap-2 w-full rounded-md mb-8">
-          <p className="text-[22px] font-bold">Add New Category</p>
-          <Form
-            form={addForm}
-            layout="vertical"
-            className="flex flex-col space-y-6 mb-6"
+        <Form form={form} layout="vertical" onFinish={handleCategorySave}>
+          <Form.Item
+            label="Name"
+            name="name"
+            rules={[{ required: true, message: "Please input the name!" }]}
           >
-            <Form.Item
-              name="categoryName"
-              label={<span className="custom-label-ant">Category Name</span>}
-              className="custom-form-item-ant"
-              rules={[
-                { required: true, message: "Please enter category name" },
-              ]}
-            >
-              <Input
-                placeholder="Enter category name"
-                className="custom-input-ant-modal w-full"
+            <Input placeholder="Enter name" />
+          </Form.Item>
+          <Form.Item
+            label="Description"
+            name="description"
+            rules={[
+              { required: true, message: "Please input the description!" },
+            ]}
+          >
+            <Input.TextArea rows={4} placeholder="Enter description" />
+          </Form.Item>
+          {/* Replace your current Form.Item for Category Image with this */}
+          <Form.Item label="Category Image" name="image">
+            <Upload {...uploadProps}>
+              <Button icon={<UploadOutlined />}>Upload Image</Button>
+            </Upload>
+            {imageUrl && (
+              <div style={{ marginTop: 16 }}>
+                <Image
+                  src={imageUrl}
+                  alt="Preview"
+                  width={300}
+                  height={150}
+                  style={{
+                    objectFit: "contain",
+                    border: "1px solid #f0f0f0",
+                    borderRadius: "4px",
+                  }}
+                />
+              </div>
+            )}
+          </Form.Item>
+          {/* {imageUrl && (
+            <div style={{ marginBottom: 16 }}>
+              <Image
+                src={imageUrl}
+                alt="Preview"
+                width={200}
+                style={{ objectFit: "cover" }}
               />
-            </Form.Item>
-          </Form>
-        </div>
+            </div>
+          )} */}
+          <Form.Item className="text-right">
+            <Space>
+              <Button onClick={resetModal}>Cancel</Button>
+              <Button type="primary" htmlType="submit">
+                {editingId !== null ? "Update" : "Save"}
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

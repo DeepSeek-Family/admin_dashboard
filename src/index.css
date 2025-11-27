@@ -27,12 +27,12 @@
 
 /* Hover effect - change text color to white and background gradient */
 .ant-menu-item:hover {
-  background: #2c2a5b !important;
+  background: #b91c1c !important;
   color: white !important; /* Text color to white */
 }
 
 .ant-menu-item-selected {
-  background: #2c2a5b !important;
+  background: #b91c1c !important;
   color: white !important;
   font-weight: bold;
   border-radius: 8px 0 0 8px !important;
@@ -49,7 +49,7 @@
 
 /* Ant Design Badge */
 .ant-badge .ant-badge-count {
-  background: #2c2a5b !important;
+  background: #b91c1c !important;
   color: white !important;
 }
 
@@ -70,21 +70,10 @@
 
 /* Custom table styling */
 .custom-table {
-  border: 1px solid #2c2a5b;
+  border: 1px solid #b91c1c;
   border-radius: 10px;
-  padding: 10px 10px 0 10px;
 }
-.custom-table .ant-table-thead > tr > th {
-  background-color: #2c2a5b !important;
-  color: #fff !important;
-  border-bottom: 2px solid #ddd;
-  text-align: center;
-  font-size: 18px;
-  font-weight: bold;
-  padding: 10px !important;
-}
-
-/* .custom-table .ant-table-tbody > tr > td {
+.custom-table .ant-table-tbody > tr > td {
   border-bottom: 1px solid #ddd;
   padding: 12px 16px !important;
   text-align: center !important;
@@ -93,14 +82,14 @@
 }
 
 .custom-table .ant-table-thead > tr > th {
-  border-bottom: 2px solid #2C2A5B;
+  border-bottom: 2px solid #b91c1c;
 }
 
 .custom-table .ant-table-thead > tr > th {
-  background-color: #2C2A5B !important;
+  background-color: #b91c1c !important;
   color: white !important;
   border-bottom: 2px solid #ddd;
-} */
+}
 
 /* Hide number input arrows in WebKit browsers */
 input[type="number"]::-webkit-outer-spin-button,
@@ -124,7 +113,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .custom-tooltip .ant-tooltip-inner {
-  background: #2c2a5b !important;
+  background: #b91c1c !important;
   color: white;
 }
 
@@ -185,7 +174,7 @@ input[type="number"]::-webkit-inner-spin-button {
   overflow-y: auto;
   padding: 0 0 0 5px;
   /* border-radius: 5%; */
-  border-top: 1px solid #2c2a5b;
+  border-top: 1px solid #b91c1c;
 }
 
 .sidebar-menu {
@@ -199,7 +188,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .sidebar-menu .ant-menu-item:hover {
-  background-color: #2c2a5b !important; /* Hover effect */
+  background-color: #b91c1c !important; /* Hover effect */
 }
 
 .sidebar-menu .ant-menu-item-selected {
@@ -232,6 +221,14 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .menu-container::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+.responsive-table .ant-table {
+  border-radius: 10px; /* Adjust as needed */
+  overflow: hidden; /* Ensures inner content respects border-radius */
+}
+.responsive-table .ant-table-container {
+  border-radius: 10px;
 }
 
 /* Add this to your global CSS file */
@@ -301,7 +298,7 @@ select {
 /* Same design as your input fields */
 .custom-select .ant-select-selector {
   /* height: 40px !important;
-  border: 1px solid #2C2A5B !important; */
+  border: 1px solid #3fae6a !important; */
   border-radius: 200px !important;
   /* display: flex;
   align-items: center; */
@@ -313,113 +310,25 @@ select {
   border-radius: 8px;
 }
 
-/* in your CSS file */
-.custom-search .ant-input-affix-wrapper {
-  height: 40px !important;
-  border-radius: 8px 0 0 8px !important;
-  font-size: 16px !important;
+/* Table Responsive Scroll for Mobile */
+.responsive-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* smooth scroll for iOS */
 }
 
-.custom-search .ant-btn {
-  height: 40px !important;
-  border-radius: 0 8px 8px 0 !important;
-  font-size: 16px !important;
-  padding: 0 30px !important;
+.responsive-table-wrapper .ant-table {
+  min-width: 700px; /* adjust based on your table's minimum width */
 }
 
-/* Modal */
-/* Input field styling */
-.custom-input-ant-modal {
-  padding: 8px 12px !important;
-  background: transparent !important;
-  color: #1c1c1c !important;
-  border: 1px solid #1c1c1c !important;
-  border-radius: 6px !important;
-  height: 40px !important;
+/* Custom css MR */
+label {
+  color: #333;
+  font-size: 15px !important;
+  font-weight: 700;
+  margin-right: 3px;
 }
 
-.custom-input-ant-modal::placeholder {
-  color: #9d9ea1 !important;
-}
-
-/* Select field styling */
-.custom-select-ant-modal .ant-select-selector {
-  padding: 8px 12px !important;
-  background: transparent !important;
-  height: 40px !important;
-  line-height: 40px !important;
-  border: 1px solid #1c1c1c !important;
-  box-shadow: none !important;
-  border-radius: 6px !important;
-}
-
-/* Selected text & placeholder color */
-.custom-select-ant-modal .ant-select-selection-item,
-.custom-select-ant-modal .ant-select-selection-item span,
-.custom-select-ant-modal .ant-select-selection-placeholder {
-  color: #9d9ea1 !important;
-}
-
-/* Arrow icon styling */
-.custom-select-ant-modal .ant-select-arrow {
-  top: 80% !important;
-  transform: translateY(-50%) !important;
-  color: #9d9ea1 !important;
-}
-
-/* Remove focus styles */
-.custom-select-ant-modal.ant-select-focused .ant-select-selector {
-  border-color: #1c1c1c !important;
-  box-shadow: none !important;
-}
-
-/* Change selected text color for custom Select */
-.custom-select-ant-modal .ant-select-selection-item {
-  color: #1c1c1c !important; /* your desired color */
-}
-
-/* Optional: placeholder color */
-.custom-select-ant-modal .ant-select-selection-placeholder {
-  color: #9d9ea1 !important;
-}
-
-.custom-form-item-ant .ant-form-item-label > label {
-  color: #1c1c1c;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-/* Change Form.Item label text color for Select */
-.custom-form-item-ant-select .ant-form-item-label > label {
-  color: #1c1c1c; /* desired label color */
-  font-weight: 600; /* optional font weight */
-  font-size: 14px; /* optional font size */
-}
-
-/* Reduce bottom margin */
-.custom-form-item-ant {
-  margin-bottom: 0px !important; /* adjust as needed */
-}
-.custom-form-item-ant-select {
-  margin-bottom: 8px !important; /* adjust as needed */
-}
-
-.custom-form-item-ant-select .ant-form-item-explain {
-  margin-top: 7px;
-}
-
-.custom-input-ant-modal textarea {
-  height: auto !important; /* allow rows/inline height to work */
-  min-height: 40px; /* normal input minimum height */
-  padding: 8px 12px !important;
-  border-radius: 6px !important;
-}
-
-/* Make Ant Upload wrapper and button full width */
-.ant-upload {
-  width: 100% !important;
-}
-
-.ant-upload > .ant-btn {
-  width: 100% !important;
+.ant-table-measure-row{
+  display: none;
 }

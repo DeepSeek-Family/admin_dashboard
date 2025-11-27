@@ -1,15 +1,31 @@
-import { Button, Form, Input } from "antd";
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import keyIcon from "../../assets/key.png";
+import { Button, Form, Input, message } from "antd";
 import { ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import keyIcon from "../../assets/key.png";
+import { useForgotPasswordMutation } from "../../redux/apiSlices/authSlice";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
 
+  const [forgotPassword, { isLoading: isSending }] =
+    useForgotPasswordMutation();
+
   const onFinish = async (values) => {
-    navigate(`/auth/verify-otp?email=${values?.email}`);
+    try {
+      const payload = { email: values?.email };
+      const res = await forgotPassword(payload).unwrap();
+      // Optionally, check res.success or server message
+      message.success(res?.message || "OTP sent to your email");
+      navigate(
+        `/auth/otp-verification?email=${encodeURIComponent(values?.email)}`
+      );
+    } catch (err) {
+      const errMsg =
+        err?.data?.message ||
+        err?.message ||
+        "Failed to send reset instructions";
+      message.error(errMsg);
+    }
   };
 
   return (
@@ -17,25 +33,14 @@ const ForgotPassword = () => {
       <img src={keyIcon} alt="KeyIcon" className="mb-[24px] mx-auto" />
       <div className="text-center mb-8">
         <h1 className="text-[25px] font-semibold mb-6">Forgot password?</h1>
-        <p className="px-8 mx-auto text-base">
+        <p className="w-[90%] mx-auto text-base">
           No worries, we’ll send you reset instructions.
         </p>
       </div>
 
       <Form layout="vertical" onFinish={onFinish}>
         <Form.Item
-          label={
-            <p
-              style={{
-                display: "block",
-                color: "#5C5C5C",
-              }}
-              htmlFor="email"
-              className="font-semibold "
-            >
-              Email
-            </p>
-          }
+          label={<p>Email</p>}
           name="email"
           id="email"
           rules={[
@@ -52,28 +57,29 @@ const ForgotPassword = () => {
               border: "1px solid #d9d9d9",
               outline: "none",
               boxShadow: "none",
-              borderRadius: "8px",
-              borderColor: "#2C2A5B",
+              borderRadius: "200px",
+              borderColor: "#b91c1c",
             }}
           />
         </Form.Item>
 
         <Form.Item>
-          <button
+          <Button
+            type="primary"
             htmlType="submit"
-            type="submit"
+            block
+            loading={isSending}
             style={{
-              width: "100%",
               height: 45,
-              fontWeight: "400px",
-              fontSize: "18px",
-              borderRadius: "8px",
+              fontWeight: 400,
+              fontSize: 18,
+              borderRadius: 200,
               marginTop: 20,
             }}
-            className="flex items-center justify-center border border-primary bg-primary rounded-lg hover:bg-white text-white hover:text-primary transition"
+            className="flex items-center justify-center bg-primary rounded-lg"
           >
             Submit
-          </button>
+          </Button>
         </Form.Item>
       </Form>
       <div className="">

@@ -1,34 +1,81 @@
-import { Menu, Modal } from "antd";
-import { useEffect, useState, useMemo } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { IoIosLogOut } from "react-icons/io";
 import {
-  Settings,
-  People,
-  SubscriptionManagement,
-  FileIcon,
-  CategoryIcon,
-} from "../../components/common/Svg";
-import image4 from "../../assets/image4.png";
-import { useUser } from "../../provider/User";
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
+import { Button, Menu, Modal, Upload } from "antd";
+import { useEffect, useState } from "react";
+import { IoIosLogOut } from "react-icons/io";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
-const Sidebar = ({ collapsed, isMobile }) => {
+import image4 from "../../assets/image4.png";
+import {
+  Dashboard,
+  loginCredentials,
+  Revenue,
+  Settings,
+  SubscriptionManagement,
+} from "../../components/common/Svg";
+
+const Sidebar = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
   const path = location.pathname;
   const [selectedKey, setSelectedKey] = useState("");
   const [openKeys, setOpenKeys] = useState([]);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [logo, setLogo] = useState(image4); // state for logo
   const navigate = useNavigate();
-  const { user } = useUser();
+  // Narrower default widths (expanded widths reduced)
+  const [sidebarWidth, setSidebarWidth] = useState(collapsed ? 72 : 260);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        // mobile
+        setSidebarWidth(collapsed ? 56 : 180);
+      } else if (window.innerWidth < 1024) {
+        // tablet
+        setSidebarWidth(collapsed ? 64 : 220);
+      } else {
+        // desktop
+        setSidebarWidth(collapsed ? 72 : 260);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, [collapsed]);
 
   const showLogoutConfirm = () => setIsLogoutModalOpen(true);
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    // localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setIsLogoutModalOpen(false);
     navigate("/auth/login");
   };
   const handleCancel = () => setIsLogoutModalOpen(false);
+
+  // Logo upload handler
+  // Logo upload handler
+  const handleLogoUpload = (file) => {
+    const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
+    if (!isJpgOrPng) {
+      message.error("You can only upload JPG/PNG files!");
+      return Upload.LIST_IGNORE; // Prevent non-JPG/PNG files
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => setLogo(e.target.result);
+    reader.readAsDataURL(file);
+
+    return false; // Prevent auto-upload
+  };
+
+  <Upload beforeUpload={handleLogoUpload} showUploadList={false}>
+    <Button size="small" icon={<UploadOutlined />} className="mt-2">
+      Upload Logo
+    </Button>
+  </Upload>;
 
   const isItemActive = (itemKey) =>
     selectedKey === itemKey ||
@@ -52,145 +99,197 @@ const Sidebar = ({ collapsed, isMobile }) => {
     );
   };
 
-  const rawMenuItems = useMemo(() => [
+  const menuItems = [
     {
-      key: "/dashboard",
-      label: (
-        <Link to="/dashboard">{collapsed ? "" : "Dashboard Overview"}</Link>
-      ),
-      //
+      key: "/",
+      icon: renderIcon(Dashboard, "/"),
+      label: <Link to="/">{collapsed ? "" : "Dashboard Overview"}</Link>,
     },
     {
-      key: "/user-management",
+      key: "/submissionManagement",
+      icon: renderIcon(SubscriptionManagement, "/submissionManagement"),
       label: (
-        <Link to="/user-management">{collapsed ? "" : "User Management"}</Link>
+        <Link to="/submissionManagement">{collapsed ? "" : "Submission"}</Link>
       ),
     },
     {
-      key: "/subscription-management",
+      key: "/reportingAnalytics",
+      icon: renderIcon(Revenue, "/reportingAnalytics"),
       label: (
-        <Link to="/subscription-management">
-          {collapsed ? "" : "Subscription Management"}
+        <Link to="/reportingAnalytics">
+          {collapsed ? "" : "Reporting & Analytics"}
         </Link>
       ),
     },
     {
-      key: "/reports-analytics",
+      key: "/totalEarnings",
+      icon: renderIcon(Revenue, "/totalEarnings"),
       label: (
-        <Link to="/reports-analytics">
-          {collapsed ? "" : "Reports & Analytics"}
-        </Link>
+        <Link to="/totalEarnings">{collapsed ? "" : "Total Earnings"}</Link>
       ),
     },
-    {
-      key: "subMenuSetting",
-      label: collapsed ? "" : "Settings",
 
-      children: [
-        {
-          key: "/profile",
-          label: <Link to="/profile">{collapsed ? "" : "Update Profile"}</Link>,
-        },
-        {
-          key: "/terms-and-conditions",
-          label: (
-            <Link to="/terms-and-conditions">
-              {collapsed ? "" : "Terms & Conditions"}
-            </Link>
-          ),
-        },
-        {
-          key: "/privacy-policy",
-          label: (
-            <Link to="/privacy-policy">
-              {collapsed ? "" : "Privacy Policy"}
-            </Link>
-          ),
-        },
-      ],
+    // {
+    //   key: "/sellManagement",
+    //   icon: renderIcon(Sales, "/sellManagement"),
+    //   label: (
+    //     <Link to="/sellManagement">{collapsed ? "" : "Sell Management"}</Link>
+    //   ),
+    // },
+    // {
+    //   key: "/loyaltyProgram",
+    //   icon: renderIcon(People, "/loyaltyProgram"),
+    //   label: (
+    //     <Link to="/loyaltyProgram">{collapsed ? "" : "Loyalty Program"}</Link>
+    //   ),
+    // },
+    // {
+    //   key: "/customerManagement",
+    //   icon: renderIcon(People, "/customerManagement"),
+    //   label: (
+    //     <Link to="/customerManagement">
+    //       {collapsed ? "" : "Customer Management"}
+    //     </Link>
+    //   ),
+    // },
+    // {
+    //   key: "/promotionManagement",
+    //   icon: renderIcon(PromotionManagement, "/promotionManagement"),
+    //   label: (
+    //     <Link to="/promotionManagement">
+    //       {collapsed ? "" : "Promotions & Discounts"}
+    //     </Link>
+    //   ),
+    // },
+
+    {
+      key: "/userManagement",
+      icon: renderIcon(loginCredentials, "/userManagement"),
+      label: (
+        <Link to="/userManagement">{collapsed ? "" : "User Management"}</Link>
+      ),
     },
+
+    {
+      key: "/profile",
+      icon: renderIcon(Settings, "/profile"),
+      label: <Link to="/profile">{collapsed ? "" : "Settings"}</Link>,
+    },
+    // {
+    //   key: "subMenuSetting",
+    //   icon: renderIcon(Settings, "subMenuSetting"),
+    //   label: collapsed ? "" : "Settings",
+    //   children: [
+    //     {
+    //       key: "/profile",
+    //       label: <Link to="/profile">{collapsed ? "" : "Update Profile"}</Link>,
+    //     },
+    //     // {
+    //     //   key: "/userManagement",
+    //     //   label: (
+    //     //     <Link to="/userManagement">
+    //     //       {collapsed ? "" : "User Management"}
+    //     //     </Link>
+    //     //   ),
+    //     // },
+    //     // {
+    //     //   key: "/terms-and-conditions",
+    //     //   label: (
+    //     //     <Link to="/terms-and-conditions">
+    //     //       {collapsed ? "" : "Terms And Conditions"}
+    //     //     </Link>
+    //     //   ),
+    //     // },
+    //     // {
+    //     //   key: "/privacy-policy",
+    //     //   label: (
+    //     //     <Link to="/privacy-policy">
+    //     //       {collapsed ? "" : "Privacy Policy"}
+    //     //     </Link>
+    //     //   ),
+    //     // },
+    //   ],
+    // },
     {
       key: "/logout",
+      icon: <IoIosLogOut size={24} />,
       label: <p onClick={showLogoutConfirm}>{collapsed ? "" : "Logout"}</p>,
     },
-  ], [collapsed]);
-
-  const menuItems = useMemo(() =>
-    rawMenuItems.filter(
-      (item) => !item.role || item.role.includes(user?.role)
-    ), [rawMenuItems, user?.role]
-  );
-
-  const menuItemsForRender = useMemo(() =>
-    menuItems.map((item) => ({
-      ...item,
-      icon: item.key === "/logout" ? <IoIosLogOut size={24} /> : renderIcon(
-        item.key === "/dashboard" ? FileIcon :
-        item.key === "/user-management" ? People :
-        item.key === "/subscription-management" ? SubscriptionManagement :
-        item.key === "/reports-analytics" ? CategoryIcon :
-        item.key === "subMenuSetting" ? Settings : null,
-        item.key
-      ),
-      children: item.children
-        ? item.children.map((subItem) => ({ ...subItem }))
-        : undefined,
-    })), [menuItems, selectedKey]
-  );
+  ];
 
   useEffect(() => {
     const selectedItem = menuItems.find(
       (item) =>
-        item.key === path ||
-        (item.children && item.children.some((sub) => sub.key === path))
+        item.key === path || item.children?.some((sub) => sub.key === path)
     );
     if (selectedItem) {
-      if (selectedKey !== path) setSelectedKey(path);
-      if (selectedItem.children) {
-        if (!openKeys.includes(selectedItem.key)) setOpenKeys([selectedItem.key]);
-      } else {
-        const parentItem = menuItems.find(
-          (item) =>
-            item.children && item.children.some((sub) => sub.key === path)
+      setSelectedKey(path);
+      if (selectedItem.children) setOpenKeys([selectedItem.key]);
+      else {
+        const parentItem = menuItems.find((item) =>
+          item.children?.some((sub) => sub.key === path)
         );
-        if (parentItem && !openKeys.includes(parentItem.key)) {
-          setOpenKeys([parentItem.key]);
-        }
+        if (parentItem) setOpenKeys([parentItem.key]);
       }
     }
-  }, [path, menuItems, selectedKey, openKeys]);
+  }, [path]);
+
+  const handleOpenChange = (keys) => setOpenKeys(keys);
 
   return (
     <div
-      className={`h-full flex flex-col bg-white transition-all duration-300 z-40 ${
-        isMobile
-          ? `fixed top-0 left-0 w-64 h-full shadow-lg transform ${
-              collapsed ? "-translate-x-full" : "translate-x-0"
-            }`
-          : ""
-      }`}
-      style={{ width: collapsed && !isMobile ? 80 : 250 }}
+      className="h-full flex flex-col bg-white transition-all duration-300 overflow-x-hidden min-w-0"
+      style={{ width: sidebarWidth }}
     >
-      {/* Logo */}
-      {!collapsed && (
-        <Link
-          to={"/"}
-          className="logo-container flex items-center justify-center py-11"
+      {/* Toggle Button */}
+      <div
+        className={`flex ${
+          collapsed ? "justify-center" : "justify-end"
+        } items-center p-2`}
+      >
+        <button
+          type="button"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-2 rounded-md hover:bg-gray-100 transition-colors"
         >
-          <img src={image4} alt="logo" className="w-40 " />
-        </Link>
+          {collapsed ? (
+            <MenuUnfoldOutlined style={{ fontSize: 20 }} />
+          ) : (
+            <MenuFoldOutlined style={{ fontSize: 20 }} />
+          )}
+        </button>
+      </div>
+
+      {/* Logo + Upload */}
+      {!collapsed && (
+        <div className="flex ml-6 py-4">
+          <Link to={"/"}>
+            <img src={logo} alt="logo" className="w-32 h-32 object-contain" />
+          </Link>
+          {/* <Upload beforeUpload={handleLogoUpload} showUploadList={false}>
+            <Button size="small" icon={<UploadOutlined />} className="mt-2">
+              Upload Logo
+            </Button>
+          </Upload> */}
+        </div>
       )}
 
       {/* Menu */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <Menu
           mode="inline"
-          inlineCollapsed={collapsed && !isMobile}
+          inlineCollapsed={collapsed}
           selectedKeys={[selectedKey]}
           openKeys={openKeys}
-          onOpenChange={setOpenKeys}
+          onOpenChange={handleOpenChange}
           className="font-poppins text-black border-none"
-          items={menuItemsForRender}
+          items={menuItems.map((item) => ({
+            ...item,
+            children: item.children
+              ? item.children.map((subItem) => ({ ...subItem }))
+              : undefined,
+          }))}
         />
       </div>
 

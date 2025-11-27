@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Line } from "react-chartjs-2";
+// LineChart.jsx
+import { Spin } from "antd";
 import {
-  Chart as ChartJS,
   CategoryScale,
+  Chart as ChartJS,
   LinearScale,
-  PointElement,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
 } from "chart.js";
+import { useState } from "react";
+import { Line } from "react-chartjs-2";
+import { useSummaryQuery } from "../../redux/apiSlices/homeSlice";
 
 // Registering chart.js components
 ChartJS.register(
@@ -18,208 +20,161 @@ ChartJS.register(
   PointElement,
   LineElement,
   Title,
-  Tooltip,
-  Legend
+  Tooltip
 );
 
+// Sample/fallback data matching your chart
+const sampleRevenueData = [
+  { month: "Jan", revenue: 120000 },
+  { month: "Feb", revenue: 160000 },
+  { month: "Mar", revenue: 170000 },
+  { month: "Apr", revenue: 160000 },
+  { month: "May", revenue: 200000 },
+  { month: "Jun", revenue: 387530 },
+  { month: "Jul", revenue: 300000 },
+  { month: "Aug", revenue: 200000 },
+  { month: "Sep", revenue: 180000 },
+  { month: "Oct", revenue: 192670 },
+  { month: "Nov", revenue: 230000 },
+  { month: "Dec", revenue: 240000 },
+];
 const LineChart = () => {
-  const [selectedYear, setSelectedYear] = useState(2025);
-  const [chartHeight, setChartHeight] = useState("200px");
-  const [isOpen, setIsOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const [yearFilter, setYearFilter] = useState(currentYear);
 
-  const years = [2023, 2024, 2025];
+  // Call API
+  const { data: apiResp, isLoading, isError } = useSummaryQuery();
 
-  useEffect(() => {
-    const updateChartHeight = () => {
-      if (window.innerWidth < 768) setChartHeight("150px");
-      else if (window.innerWidth < 1024) setChartHeight("200px");
-      else setChartHeight("250px");
-    };
+  // API returns { success, message, data: { January: 0, ... } }
+  const monthsOrder = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
-    updateChartHeight();
-    window.addEventListener("resize", updateChartHeight);
-    return () => window.removeEventListener("resize", updateChartHeight);
-  }, []);
+  const revenueData =
+    apiResp && apiResp.data
+      ? monthsOrder.map((m, idx) => ({
+          month: m.slice(0, 3),
+          revenue: Number(apiResp.data[m] ?? 0),
+        }))
+      : sampleRevenueData;
 
-  const allData = {
-    2023: {
-      labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      datasets: [
-        {
-          label: "Total Revenue",
-          data: [100, 120, 150, 160, 180, 200, 250, 270, 220, 240, 210, 250],
-          fill: false,
-          borderColor: "#2C2A5B",
-          backgroundColor: "transparent",
-          tension: 0.4,
-          borderWidth: 2,
-          pointBorderColor: "#2C2A5B",
-          pointBackgroundColor: "#2C2A5B",
-          pointRadius: 4,
-        },
-      ],
-    },
-    2024: {
-      labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      datasets: [
-        {
-          label: "Total Revenue",
-          data: [150, 120, 145, 160, 180, 387, 225, 210, 230, 126, 250, 300],
-          fill: false,
-          borderColor: "#2C2A5B",
-          backgroundColor: "transparent",
-          tension: 0.4,
-          borderWidth: 2,
-          pointBorderColor: "#2C2A5B",
-          pointBackgroundColor: "#2C2A5B",
-          pointRadius: 4,
-        },
-      ],
-    },
-    2025: {
-      labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      datasets: [
-        {
-          label: "Total Revenue",
-          data: [200, 180, 210, 250, 300, 400, 350, 320, 310, 290, 330, 400],
-          fill: false,
-          borderColor: "#2C2A5B",
-          backgroundColor: "transparent",
-          tension: 0.4,
-          borderWidth: 2,
-          pointBorderColor: "#2C2A5B",
-          pointBackgroundColor: "#2C2A5B",
-          pointRadius: 4,
-        },
-      ],
-    },
+  const data = {
+    labels: revenueData.map((item) => item.month),
+    datasets: [
+      {
+        label: "Total Revenue",
+        data: revenueData.map((item) => item.revenue),
+        fill: false,
+        borderColor: "#B91C1C",
+        backgroundColor: "transparent",
+        tension: 0.4,
+        borderWidth: 2,
+        pointBorderColor: "#B91C1C",
+        pointBackgroundColor: "#B91C1C",
+        pointRadius: 4,
+      },
+    ],
   };
 
-  const data = allData[selectedYear];
-
+  // Options for the chart
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: "index",
+      intersect: false,
+    },
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: false,
+        labels: {
+          color: "#ooo",
+        },
+      },
       tooltip: {
-        titleColor: "#ffffff",
-        bodyColor: "#ffffff",
-        backgroundColor: "#2C2A5B",
-        padding: { x: 20, y: 2 },
+        titleColor: "#fff",
+        bodyColor: "#fff",
+        borderColor: "#B91C1C",
+        borderWidth: 2,
+        backgroundColor: "#B91C1C",
+        padding: 15,
         cornerRadius: 8,
         displayColors: false,
+        bodyFont: {
+          size: 16,
+        },
+        boxPadding: 10,
         callbacks: {
-          title: () => null,
-          label: (context) => `$${context.raw.toLocaleString()}`,
+          label: (context) =>
+            `$${context.raw.toLocaleString()}`.padEnd(15, " "),
         },
       },
     },
     scales: {
       x: {
-        grid: { display: true, color: "#2C2A5B" },
+        grid: {
+          display: true,
+          color: "#B91C1C",
+        },
         ticks: {
-          color: "#181818",
-          maxRotation: 45,
-          minRotation: 0,
-          autoSkip: true,
-          font: { size: window.innerWidth < 768 ? 8 : 12 },
+          color: "#B91C1C",
         },
       },
       y: {
-        grid: { display: false },
+        grid: {
+          display: false,
+        },
         beginAtZero: false,
         ticks: {
-          color: "#181818",
-          padding: window.innerWidth < 768 ? 10 : 32,
-          callback: (value) => `$${value.toLocaleString()}K`,
-          font: { size: window.innerWidth < 768 ? 8 : 12 },
+          color: "#B91C1C",
+          padding: 32,
+          callback: function (value) {
+            return `$${value.toLocaleString()}`;
+          },
         },
       },
     },
   };
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 sm:mb-4 gap-2 sm:gap-0">
-        <h2 className="text-lg sm:text-xl font-bold text-secondary">
-          Total Revenue
-        </h2>
+    <div style={{ width: "100%", height: "250px" }} className="text-white p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="ml-4 text-xl font-bold text-black">Total Revenue</h2>
+        {/* <select
+          className="px-4 py-2 text-white bg-transparent border-2 rounded-lg outline-"
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)}
+        >
+          {years.map((year) => (
+            <option key={year} value={year} className="text-black">
+              {year}
+            </option>
+          ))}
+        </select> */}
+      </div>
 
-        {/* Custom dropdown like Statistics select */}
-        <div className="relative inline-block w-[150px]">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-full font-medium text-[14px] py-[12px] px-[16px] border border-primary text-secondary rounded-lg text-left flex justify-between items-center"
-          >
-            {selectedYear}
-            <span className="ml-2">▼</span>
-          </button>
-
-          {isOpen && (
-            <ul className="absolute z-10 w-full bg-white border border-primary rounded-lg mt-1 shadow-lg">
-              {years.map((year) => (
-                <li
-                  key={year}
-                  onClick={() => {
-                    setSelectedYear(year);
-                    setIsOpen(false);
-                  }}
-                  className="cursor-pointer px-4 py-2 text-black hover:bg-primary/10"
-                >
-                  {year}
-                </li>
-              ))}
-            </ul>
-          )}
+      {isLoading ? (
+        <div
+          className="flex items-center justify-center"
+          style={{ height: 180 }}
+        >
+          <Spin tip="Loading revenue..." />
         </div>
-      </div>
-
-      <div
-        style={{ width: "100%", height: chartHeight }}
-        className="text-white"
-      >
+      ) : (
         <Line data={data} options={options} />
-      </div>
+      )}
     </div>
   );
 };
