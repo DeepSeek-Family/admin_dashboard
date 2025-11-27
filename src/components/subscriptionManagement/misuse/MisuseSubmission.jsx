@@ -38,10 +38,8 @@ const MisuseSubmission = () => {
     // Map display status to API status format
     const statusMap = {
       Pending: "PENDING",
-      "Under Jury Review": "APPROVED",
-      "Final Review": "FINAL_REVIEW",
+      Approved: "APPROVED",
       Rejected: "REJECTED",
-      Completed: "COMPLETED",
     };
     const apiStatus =
       statusMap[submissionType] ||
@@ -313,10 +311,8 @@ const MisuseSubmission = () => {
           >
             <Option value="All">All Status</Option>
             <Option value="Pending">Pending</Option>
-            <Option value="Under Jury Review">Under Jury Review</Option>
-            <Option value="Final Review">Final Review</Option>
+            <Option value="Approved">Approved</Option>
             <Option value="Rejected">Rejected</Option>
-            <Option value="Completed">Completed</Option>
           </Select>
         </div>
       </div>
