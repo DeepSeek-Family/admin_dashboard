@@ -8,6 +8,7 @@ import {
 import { TableColumns } from "./CulomsTable";
 // import { AcceptModal, EditModal, JuryModal } from "./GeneratePDFContent ";
 import PDFModal from "./PDFModal";
+import MisuseDetailModal from "./MisuseDetailModal";
 
 const { Option } = Select;
 
@@ -345,7 +346,7 @@ const MisuseSubmission = () => {
       </div>
 
       {/* Modals */}
-      <PDFModal
+      <MisuseDetailModal
         visible={isPDFModalVisible}
         onCancel={() => setIsPDFModalVisible(false)}
         selectedRecord={selectedRecord}

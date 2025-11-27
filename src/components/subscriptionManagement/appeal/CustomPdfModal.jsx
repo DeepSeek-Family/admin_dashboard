@@ -391,10 +391,10 @@ export default function AppealCustomPdfModal({
         {/* Jury Panel Decisions: */}
         <div className="mb-4">
           <h3 className="font-bold text-md mb-2">CASE OUTCOME APPEALED:</h3>
-          {selectedRecord?.submission?.jurorDecisions &&
-          selectedRecord?.submission?.jurorDecisions.length > 0 ? (
+          {selectedRecord?.submittionId?.jurorDecisions &&
+          selectedRecord?.submittionId?.jurorDecisions.length > 0 ? (
             <ul className="">
-              {selectedRecord?.submission?.jurorDecisions.map(
+              {selectedRecord?.submittionId?.jurorDecisions.map(
                 (decision, index) => (
                   <li key={index} className="mb-2">
                     <p>
@@ -458,7 +458,16 @@ export default function AppealCustomPdfModal({
         {/* REVIEW OPTION SELECTED: */}
         <div className="mb-4">
           <h3 className="font-bold text-md mb-2">REVIEW OPTION SELECTED:</h3>
-          <p className="pl-3">1. {selectedRecord?.reviewOption || "N/A"}</p>
+          <p className="pl-3">
+            1.{" "}
+            {selectedRecord?.reviewOption === "NewJurorPanel"
+              ? "New Juror Panel"
+              : selectedRecord?.reviewOption === "PlatformAppealsBoard"
+              ? "Platform Appeals Board"
+              : selectedRecord?.reviewOption === "ModeratorOnlyReview"
+              ? "Moderator Only Review"
+              : selectedRecord?.reviewOption || "N/A"}
+          </p>
         </div>
 
         {/* Admin Decision */}

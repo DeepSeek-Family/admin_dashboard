@@ -69,7 +69,14 @@ const AppealSubmission = () => {
           (item.user?.middleName ? item.user.middleName + " " : "") +
           (item.user?.lastName || "") || "N/A";
       const email = item.user?.email || "N/A";
-      const reviewOption = item.reviewOption || "N/A";
+      const reviewOption =
+        item.reviewOption === "NewJurorPanel"
+          ? "New Juror Panel"
+          : item.reviewOption === "PlatformAppealsBoard"
+          ? "Platform Appeals Board"
+          : item.reviewOption === "ModeratorOnlyReview"
+          ? "Moderator Only Review"
+          : item.reviewOption || "N/A";
       const jurorVote = (item.jurorDecisions?.length || 0) + " of 3";
       const humanStatus = (item.status || "")
         .toLowerCase()
