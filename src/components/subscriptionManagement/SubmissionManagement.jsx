@@ -6,7 +6,7 @@ import AppealSubmission from "./appeal/AppealSubmission";
 import InitialSubmission from "./initial/InitialSubmission";
 import MisuseSubmission from "./misuse/MisuseSubmission";
 import RespondentSubmission from "./respondent/RespondentSubmission";
-import TechnicalSupportSubmission from "./technicalSupport/technicalSupportSubmission";
+import TechnicalSupportSubmission from "./technicalSupport/TechnicalSupportSubmission";
 import JurorProgramSubmission from "./enrollJurorProgram/JurorProgramSubmission";
 import IdentityDisputeSubmission from "./identityClaim/IdentityDisputeSubmission";
 import RecusalSubmission from "./recusal/RecusalSubmission";
