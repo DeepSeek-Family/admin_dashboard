@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   server: {
     host: true, // allows access from outside (e.g., EC2, domain)
     port: 5175, // change this to your desired port
