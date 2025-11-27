@@ -1,38 +1,13 @@
 import { Button, Modal } from "antd";
-import { getImageUrl } from "../../common/imageUrl";
 
-export default function AppealCustomPdfModal({
+export default function RespondentCustomPdfModal({
   visible,
   onCancel,
   selectedRecord,
 }) {
-  // Normalize appeal grounds: supports JSON string or array
-  const appealGroundsList = (() => {
-    const raw = selectedRecord?.appealGrounds;
-    if (!raw) return [];
-    try {
-      if (Array.isArray(raw)) return raw.filter(Boolean);
-      if (typeof raw === "string") {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed.filter(Boolean);
-        return [raw].filter(Boolean);
-      }
-      return [];
-    } catch {
-      // Fallback: try to split comma-separated strings
-      if (typeof raw === "string") {
-        return raw
-          .replace(/^\[|\]$/g, "")
-          .split(/\s*,\s*/)
-          .map((s) => s.replace(/^"|"$/g, ""))
-          .filter(Boolean);
-      }
-      return [];
-    }
-  })();
   return (
     <Modal
-      open={!!visible}
+      visible={!!visible}
       onCancel={onCancel}
       footer={
         <div className="flex justify-end gap-2">
@@ -78,34 +53,17 @@ export default function AppealCustomPdfModal({
                 const clone = content.cloneNode(true);
                 clone.style.boxSizing = "border-box";
                 clone.style.background = "#ffffff";
-                clone.style.padding = "24px";
+                clone.style.padding = "24px"; // slight inner padding to preserve design
                 clone.style.width = getComputedStyle(content).width;
-                clone.style.maxHeight = "none";
-                clone.style.height = "auto";
-                clone.style.overflow = "visible";
 
                 const wrapper = document.createElement("div");
                 wrapper.style.position = "fixed";
                 wrapper.style.left = "-9999px";
-                wrapper.style.overflow = "visible";
                 wrapper.appendChild(clone);
                 document.body.appendChild(wrapper);
 
                 // inline computed styles to ensure exact visual match
                 copyComputedStyles(content, clone);
-
-                // Remove overflow constraints from all elements
-                clone.querySelectorAll("*").forEach((el) => {
-                  const computed = window.getComputedStyle(el);
-                  if (
-                    computed.overflow === "hidden" ||
-                    computed.overflow === "auto" ||
-                    computed.maxHeight !== "none"
-                  ) {
-                    el.style.overflow = "visible";
-                    el.style.maxHeight = "none";
-                  }
-                });
 
                 // Inject a small print stylesheet into the clone so
                 // ordered-list numbers and list text align correctly
@@ -146,19 +104,13 @@ export default function AppealCustomPdfModal({
                 // add an invisible spacer at the bottom of the clone to provide bleed
                 const bleedSpacer = document.createElement("div");
                 bleedSpacer.style.width = "100%";
-                bleedSpacer.style.height = "250px";
+                bleedSpacer.style.height = "80px";
                 bleedSpacer.style.background = "transparent";
                 clone.appendChild(bleedSpacer);
-
-                // Wait a moment for layout to settle
-                await new Promise((resolve) => setTimeout(resolve, 100));
-
                 const canvas = await html2canvas.default(clone, {
                   scale: 2,
                   useCORS: true,
                   backgroundColor: "#ffffff",
-                  windowHeight: clone.scrollHeight,
-                  height: clone.scrollHeight,
                 });
 
                 // cleanup clone
@@ -305,7 +257,7 @@ export default function AppealCustomPdfModal({
       <div id="custom-pdf-content">
         {/* Case ID */}
         <h1 className="text-center font-bold text-lg border-b-2 pb-2 mt-4 mb-4 border-black">
-          {selectedRecord?.submittionId?.caseId || "N/A"}
+          {selectedRecord?.caseId || "N/A"}
         </h1>
         <div className="flex justify-between border-b-2 pb-1 mb-2 border-black">
           {/* Initiator Details */}
@@ -315,27 +267,11 @@ export default function AppealCustomPdfModal({
                 Initiator
               </h2>
               <p className="text-[16px]">
-                <strong>Name:</strong>{" "}
-                {[
-                  selectedRecord?.user?.firstName,
-                  selectedRecord?.user?.middleName,
-                  selectedRecord?.user?.lastName,
-                ]
-                  .filter(Boolean)
-                  .join(" ") || "N/A"}
+                <strong>Name:</strong> {selectedRecord?.user?.name || "N/A"}
               </p>
               <p className="text-[16px]">
                 <strong>DOB:</strong>{" "}
-                {selectedRecord?.user?.birthDate
-                  ? new Date(selectedRecord.user.birthDate).toLocaleDateString(
-                      "en-US",
-                      {
-                        month: "2-digit",
-                        day: "2-digit",
-                        year: "numeric",
-                      }
-                    )
-                  : "N/A"}
+                {selectedRecord?.user?.dob || "00/00/0000"}
               </p>
             </div>
           </div>
@@ -347,202 +283,87 @@ export default function AppealCustomPdfModal({
                 Respondent
               </h2>
               <p className="text-[16px]">
-                <strong>Name:</strong>{" "}
-                {[
-                  selectedRecord?.submittionId?.respondentFastName,
-                  selectedRecord?.submittionId?.respondentMiddleName,
-                  selectedRecord?.submittionId?.respondentLastName,
-                ]
-                  .filter(Boolean)
-                  .join(" ") || "N/A"}
+                <strong>Name:</strong> {selectedRecord?.user?.name || "N/A"}
               </p>
               <p className="text-[16px]">
                 <strong>DOB:</strong>{" "}
-                {selectedRecord?.submittionId?.dob
-                  ? new Date(
-                      selectedRecord.submittionId.dob
-                    ).toLocaleDateString("en-US", {
-                      month: "2-digit",
-                      day: "2-digit",
-                      year: "numeric",
-                    })
-                  : "N/A"}
+                {selectedRecord?.user?.dob || "00/00/0000"}
               </p>
             </div>
           </div>
         </div>
-        <h1 className="text-center text-lg font-semibold border-b-2 pb-3 mb-2 border-black">
-          {selectedRecord?.createdAt
-            ? new Date(selectedRecord.createdAt).toLocaleString("en-US", {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              })
-            : "10/12/2025 06:33 AM"}
+        <h1 className="text-center text-lg font-semibold border-b-2 pb-1 mb-2 border-black">
+          10/12/2025 06:33 AM
         </h1>
 
         <p className="text-center font-bold text-xl mb-2">
-          APPEAL SUBMISSION FORM
+          INITIAL SUBMISSION FORM
         </p>
-
-        {/* Jury Panel Decisions: */}
-        <div className="mb-4">
-          <h3 className="font-bold text-md mb-2">CASE OUTCOME APPEALED:</h3>
-          {selectedRecord?.submission?.jurorDecisions &&
-          selectedRecord?.submission?.jurorDecisions.length > 0 ? (
-            <ul className="">
-              {selectedRecord?.submission?.jurorDecisions.map(
-                (decision, index) => (
-                  <li key={index} className="mb-2">
-                    <p>
-                      <strong>Juror:</strong>{" "}
-                      {decision?.juror?.firstName || "N/A"}
-                    </p>
-                    <p>
-                      <strong>Action:</strong> {decision?.action || "N/A"}
-                    </p>
-                    <p>
-                      <strong>Comment:</strong> {decision?.comment || "N/A"}
-                    </p>
-                    <p>
-                      <strong>Voted At:</strong>{" "}
-                      {decision.votedAt
-                        ? new Date(decision.votedAt).toLocaleString("en-US", {
-                            month: "2-digit",
-                            day: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          })
-                        : "N/A"}
-                    </p>
-                  </li>
-                )
-              )}
-            </ul>
-          ) : (
-            <p className="text-center text-gray-500">No jury decisions yet</p>
-          )}
-        </div>
-
         {/* Allegation Summary */}
         <div className="mb-4">
-          <h3 className="font-bold text-md mb-2">APPEAL GROUNDS:</h3>
+          <h3 className="text-center font-bold text-lg mb-2">
+            ALLEGATION SUMMARY
+          </h3>
           <ol className="list-decimal pl-6">
-            {appealGroundsList && appealGroundsList.length > 0 ? (
-              appealGroundsList.map((item, index) => (
-                <li key={index} className="mb-1">
-                  {String(item)}
-                </li>
-              ))
-            ) : (
-              <li className="mb-1">N/A</li>
-            )}
+            <li className="mb-1">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </li>
+            <li className="mb-1">
+              Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </li>
+            <li className="mb-1">
+              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
+            </li>
+            <li className="mb-1">
+              Duis aute irure dolor in reprehenderit in voluptate velit esse
+              cillum dolore eu fugiat nulla pariatur.
+            </li>
           </ol>
-          <p>
-            <span className="font-bold">Other:</span>{" "}
-            <span>{selectedRecord?.declarationAndSubmission || "N/A"}</span>
-          </p>
         </div>
-
-        {/* justification */}
-        <div className="mb-4">
-          <h3 className="font-bold text-md mb-1">JUSTIFICATION:</h3>
-          <p className="">{selectedRecord?.justification || "N/A"}</p>
-        </div>
-
-        {/* REVIEW OPTION SELECTED: */}
-        <div className="mb-4">
-          <h3 className="font-bold text-md mb-2">REVIEW OPTION SELECTED:</h3>
-          <p className="pl-3">1. {selectedRecord?.reviewOption || "N/A"}</p>
-        </div>
-
-        {/* Admin Decision */}
-        {/* <div className="mb-4">
-          <h3 className="text-center font-bold text-lg mb-2">ADMIN DECISION</h3>
-          {selectedRecord?.submission?.adminDecisions &&
-          selectedRecord?.submission?.adminDecisions.length > 0 ? (
-            <ol className="list-decimal pl-6">
-              {selectedRecord.submission?.adminDecisions.map(
-                (decision, index) => (
-                  <li key={index} className="mb-1">
-                    {decision}
-                  </li>
-                )
-              )}
-            </ol>
-          ) : (
-            <p className="text-center text-gray-500">No admin decision yet</p>
-          )}
-        </div> */}
-
         {/* PERJURY DECLARATION */}
         <div className="mb-4">
           <h3 className="text-center font-bold text-lg mb-2">
             PERJURY DECLARATION
           </h3>
-          <p>
-            I,{" "}
-            <span className="font-semibold">
-              {[
-                selectedRecord?.user?.firstName,
-                selectedRecord?.user?.middleName,
-                selectedRecord?.user?.lastName,
-              ]
-                .filter(Boolean)
-                .join(" ") || "N/A"}
-            </span>
-            , in this case, declare and affirm in accordance with the laws of
-            the jurisdiction's involved,{" "}
-            <span className="font-bold">UNDER PENALTY OF PERJURY</span>, that
-            the information in this Appeal Request Form is true and accurate to
-            the best of my knowledge. I understand that knowingly submitting
-            false information may result in permanent suspension of platform
-            access and legal consequences.
-          </p>
-        </div>
-
-        {/* SUPPORTING DOCUMENTS */}
-        <div className="mb-4 mt-4">
-          <h3 className="text-center font-bold text-lg mb-2">
-            SUPPORTING DOCUMENTS
-          </h3>
           <ol className="list-decimal pl-6">
-            {selectedRecord?.supportingDocument &&
-              selectedRecord?.supportingDocument.length > 0 &&
-              selectedRecord?.supportingDocument.map((file, index) => (
-                <li key={index} className="mb-1">
-                  <a
-                    href={getImageUrl(file)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {file.split("/").pop()}
-                  </a>
-                </li>
-              ))}
+            <li className="mb-1">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </li>
+            <li className="mb-1">
+              Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </li>
+            <li className="mb-1">
+              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
+            </li>
+            <li className="mb-1">
+              Duis aute irure dolor in reprehenderit in voluptate velit esse
+              cillum dolore eu fugiat nulla pariatur.
+            </li>
           </ol>
         </div>
 
         {/* Initiator Signature */}
-        <div className="flex justify-end mt-12 mb-8">
+        <div className="flex justify-end mt-12">
           <div className="mr-12 flex flex-col items-center">
-            <p className="border-b-2 pb-2 border-black inline-block">
-              {[
-                selectedRecord?.user?.firstName,
-                selectedRecord?.user?.middleName,
-                selectedRecord?.user?.lastName,
-              ]
-                .filter(Boolean)
-                .join(" ") || "N/A"}
+            <p className="border-b-2 border-black inline-block">
+              {selectedRecord?.user?.name}
             </p>
-            <h3 className="font-bold text-lg">INITIATOR</h3>
+            <h3 className="font-bold text-lg mb-2">INITIATOR</h3>
           </div>
+        </div>
+
+        {/* EVIDENCE ATTACHMENTS */}
+        <div className="mb-4">
+          <h3 className="text-center font-bold text-lg mb-2">
+            EVIDENCE ATTACHMENTS
+          </h3>
+          <ol className="list-decimal pl-6">
+            <li className="mb-1">Lorem.jpg</li>
+            <li className="mb-1">Ipsum.png</li>
+            <li className="mb-1">Image-1.jpeg</li>
+          </ol>
         </div>
         {/* {selectedRecord && (
           <div className="mb-4">
