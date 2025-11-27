@@ -267,8 +267,8 @@ const AddUserModal = ({ visible, onClose, onSave, isLoading }) => {
             >
               <Option value="MODERATOR">Moderator</Option>
               <Option value="JUROR">Juror</Option>
-              <Option value="SITEFUND">Site Fund</Option>
-              <Option value="DOCUMENTS">Documents</Option>
+              {/* <Option value="SITEFUND">Site Fund</Option>
+              <Option value="DOCUMENTS">Documents</Option> */}
               <Option value="SUPER_ADMIN">Super Admin</Option>
               <Option value="USER">User</Option>
             </Select>

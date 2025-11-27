@@ -235,7 +235,7 @@ const InitialSubmission = () => {
 
     try {
       const result = await adminDecisionSubmission({
-        id: selectedRecord._id,
+        id: selectedRecord?.submission?._id,
         body: {
           adminDecisions: decisions,
         },
@@ -243,7 +243,7 @@ const InitialSubmission = () => {
 
       // Update status to APPROVED after final decision
       await updateSubmission({
-        id: selectedRecord._id,
+        id: selectedRecord?.submission?._id,
         body: { status: "APPROVED" },
       }).unwrap();
 
