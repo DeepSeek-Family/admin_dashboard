@@ -50,8 +50,9 @@ import SignUp from "../Pages/Auth/SignUp";
 import OtpVerification from "../Pages/Auth/OtpVerification";
 import ShopInfo from "../Pages/Auth/ShopInfo";
 import TotalEarnings from "../components/TotalEarnings/TotalEarnings";
-import SubmissionManagementCom from "../components/subscriptionManagement/SubmissionManagement";
+// import SubmissionManagementCom from "../components/subscriptionManagement/SubmissionManagement";
 import PrivateRoute from "./ProtectedRoute";
+import SubmmissionManagement from "../components/subscriptionManagement/SubmissionManagement";
 // import SalesRepsManagementTable from "../components/SalesRepsManagement/SalesRepsManagement";
 
 const router = createBrowserRouter([
@@ -88,7 +89,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/submissionManagement",
-        element: <SubmissionManagementCom />,
+        element: <SubmmissionManagement />,
       },
       {
         path: "/totalEarnings",
