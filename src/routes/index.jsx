@@ -53,6 +53,8 @@ import TotalEarnings from "../components/TotalEarnings/TotalEarnings";
 // import SubmissionManagementCom from "../components/subscriptionManagement/SubmissionManagement";
 import PrivateRoute from "./ProtectedRoute";
 import SubmmissionManagement from "../components/subscriptionManagement/SubmissionManagement";
+import Success from "../Pages/Dashboard/Success";
+import Failed from "../Pages/Dashboard/Failed";
 // import SalesRepsManagementTable from "../components/SalesRepsManagement/SalesRepsManagement";
 
 const router = createBrowserRouter([
@@ -243,6 +245,14 @@ const router = createBrowserRouter([
   {
     path: "*",
     element: <NotFound />,
+  },
+  {
+    path: "/success",
+    element: <Success />,
+  },
+  {
+    path: "/failed",
+    element: <Failed />,
   },
 ]);
 
